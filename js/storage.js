@@ -157,7 +157,10 @@ function getDefaultProfile() {
     height_cm: 170,
     weight_kg: 65,
     age: 25,
-    goal: 'balanced',
+    goal: 'maintain',
     activity_level: 'moderate',
+    custom_bmr: null,
+    frame_size: 'medium',
+    body_goal: 'fit',
   };
 }

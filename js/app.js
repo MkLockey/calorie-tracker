@@ -5,6 +5,7 @@ let currentImageDataUrl = null;
 
 // ====== Init ======
 document.addEventListener('DOMContentLoaded', async () => {
+  migrateProfile();
   bindNavigation();
   bindDatePicker();
   bindAddFlow();
@@ -19,6 +20,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   registerSW();
   await renderLogPage(currentDate);
 });
+
+function migrateProfile() {
+  const p = getProfile();
+  let changed = false;
+  if (p.goal === 'balanced') { p.goal = 'maintain'; changed = true; }
+  if (changed) saveProfile(p);
+}
 
 function registerSW() {
   if ('serviceWorker' in navigator) {
@@ -395,11 +403,54 @@ function bindProfilePage() {
     });
   });
 
+  // Frame buttons
+  $$('.frame-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.frame-btn').forEach(b => { b.classList.remove('btn-active'); b.classList.add('btn-outline'); });
+      btn.classList.remove('btn-outline'); btn.classList.add('btn-active');
+      updateProfileField('frame_size', btn.dataset.frame);
+      updateProfileResults();
+    });
+  });
+
+  // Body goal buttons
+  $$('.bodygoal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.bodygoal-btn').forEach(b => { b.classList.remove('btn-active'); b.classList.add('btn-outline'); });
+      btn.classList.remove('btn-outline'); btn.classList.add('btn-active');
+      updateProfileField('body_goal', btn.dataset.bodygoal);
+      updateProfileResults();
+    });
+  });
+
+  // Custom BMR toggle
+  $('#use-custom-bmr').addEventListener('change', () => {
+    const checked = $('#use-custom-bmr').checked;
+    $('#custom-bmr-row').classList.toggle('hidden', !checked);
+    if (checked) {
+      const val = parseFloat($('#custom-bmr-value').value) || 0;
+      updateProfileField('custom_bmr', val);
+    } else {
+      updateProfileField('custom_bmr', null);
+      $('#custom-bmr-value').value = '';
+    }
+    updateProfileResults();
+  });
+
+  // Custom BMR value input
+  $('#custom-bmr-value').addEventListener('input', () => {
+    if ($('#use-custom-bmr').checked) {
+      const val = parseFloat($('#custom-bmr-value').value) || 0;
+      updateProfileField('custom_bmr', val);
+      updateProfileResults();
+    }
+  });
+
   // Input fields
   ['#pf-height', '#pf-weight', '#pf-age'].forEach(sel => {
     $(sel).addEventListener('input', () => {
       const field = sel.replace('#pf-', '');
-      const val = field === 'weight_kg' ? parseFloat($(sel).value) || 65 : parseInt($(sel).value) || 25;
+      const val = field === 'weight' ? parseFloat($(sel).value) || 65 : parseInt($(sel).value) || 25;
       updateProfileField(field === 'height' ? 'height_cm' : field === 'weight' ? 'weight_kg' : 'age', val);
       updateProfileResults();
     });
@@ -411,9 +462,11 @@ function bindProfilePage() {
     updateProfileResults();
   });
 
-  // Save button (already auto-saved on change, but provide explicit save)
-  $('#btn-save-profile').addEventListener('click', () => {
+  // Save button
+  $('#btn-save-profile').addEventListener('click', async () => {
     updateProfileResults();
+    // Refresh log page progress bars with new recommendations
+    await renderLogPage(currentDate);
     showToast('参数已保存');
   });
 }

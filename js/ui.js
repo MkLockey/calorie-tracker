@@ -203,40 +203,49 @@ function renderBarChart(dates, dailyKcal) {
 
 function renderLineChart(dates, dailyKcal) {
   const maxKcal = Math.max(...dailyKcal, 2000);
-  const pad = 20, w = 100, h = 180, r = 3;
   const n = dailyKcal.length;
-  const xs = dailyKcal.map((_, i) => pad + (i / Math.max(1, n - 1)) * (w - 2 * pad));
+  const padTop = 20, padBottom = 30, padLeft = 34, padRight = 10;
+  const plotH = 150;
+  const h = padTop + plotH + padBottom;
+  const pointGap = Math.max(35, Math.min(50, Math.floor(280 / n)));
+  const plotW = pointGap * Math.max(1, n - 1);
+  const w = padLeft + plotW + padRight;
+
+  const xs = dailyKcal.map((_, i) => padLeft + i * pointGap);
+
+  const yGrid = [0, 0.25, 0.5, 0.75, 1].map(f => {
+    const y = padTop + plotH - f * plotH;
+    const val = Math.round(f * maxKcal);
+    return `<line x1="${padLeft - 4}" y1="${y}" x2="${w - padRight}" y2="${y}" class="grid-line"/>
+      <text x="${padLeft - 6}" y="${y + 3}" class="data-label" text-anchor="end">${val}</text>`;
+  }).join('');
 
   const points = dailyKcal.map((kcal, i) => {
-    const y = h - pad - (kcal / maxKcal) * (h - 2 * pad);
+    const y = padTop + plotH - (kcal / maxKcal) * plotH;
     return `${xs[i]},${y}`;
   }).join(' ');
 
-  const yGrid = [0, 0.25, 0.5, 0.75, 1].map(f => {
-    const y = h - pad - f * (h - 2 * pad);
-    const val = Math.round(f * maxKcal);
-    return `<line x1="${pad}" y1="${y}" x2="${w - pad}" y2="${y}" class="grid-line"/><text x="${pad - 4}" y="${y + 3}" class="data-label" text-anchor="end">${val}</text>`;
-  }).join('');
-
-  // Data points
   const circles = dailyKcal.map((kcal, i) => {
-    const y = h - pad - (kcal / maxKcal) * (h - 2 * pad);
     if (kcal === 0) return '';
-    return `<circle cx="${xs[i]}" cy="${y}" r="${r}" class="data-point"/>`;
+    const y = padTop + plotH - (kcal / maxKcal) * plotH;
+    return `<circle cx="${xs[i]}" cy="${y}" r="3" class="data-point"/>`;
   }).join('');
 
-  // Labels
   const labels = dates.map((d, i) =>
-    `<text x="${xs[i]}" y="${h - 2}" class="axis-label">${d.slice(5)}</text>`
+    `<text x="${xs[i]}" y="${h - 6}" class="axis-label">${d.slice(5)}</text>`
   ).join('');
 
+  const svgW = Math.max(w, 320);
+
   $('#chart-calories').innerHTML = `
-    <svg class="chart-line-svg" viewBox="0 0 ${w + pad} ${h}" preserveAspectRatio="xMidYMid meet">
-      ${yGrid}
-      <polyline points="${points}" class="data-line"/>
-      ${circles}
-      ${labels}
-    </svg>`;
+    <div class="chart-line-wrap">
+      <svg class="chart-line-svg" viewBox="0 0 ${svgW} ${h}" preserveAspectRatio="xMidYMid meet">
+        ${yGrid}
+        <polyline points="${points}" class="data-line"/>
+        ${circles}
+        ${labels}
+      </svg>
+    </div>`;
 }
 
 // ====== Profile Page ======
@@ -259,20 +268,56 @@ function renderProfilePage() {
     b.classList.toggle('btn-outline', b.dataset.goal !== p.goal);
   });
 
+  // Frame buttons
+  const frame = p.frame_size || 'medium';
+  $$('.frame-btn').forEach(b => {
+    b.classList.toggle('btn-active', b.dataset.frame === frame);
+    b.classList.toggle('btn-outline', b.dataset.frame !== frame);
+  });
+
+  // Body goal buttons
+  const bodyGoal = p.body_goal || 'fit';
+  $$('.bodygoal-btn').forEach(b => {
+    b.classList.toggle('btn-active', b.dataset.bodygoal === bodyGoal);
+    b.classList.toggle('btn-outline', b.dataset.bodygoal !== bodyGoal);
+  });
+
+  // Custom BMR
+  const useCustom = p.custom_bmr != null && p.custom_bmr > 0;
+  $('#use-custom-bmr').checked = useCustom;
+  $('#custom-bmr-value').value = useCustom ? p.custom_bmr : '';
+  $('#custom-bmr-row').classList.toggle('hidden', !useCustom);
+
   updateProfileResults();
 }
 
 function updateProfileResults() {
   const p = getProfileData();
   $('#rec-bmi').textContent = p.bmi;
-  $('#rec-weight-range').textContent = p.idealRange.min + ' - ' + p.idealRange.max + ' kg';
+  $('#rec-bodyfat').textContent = p.bodyFat.min + '% - ' + p.bodyFat.max + '% (' + p.bodyFat.label + ')';
   $('#rec-bmr').textContent = p.bmr;
+
+  // Custom BMR indicator
+  const bmrSource = $('#rec-bmr-source');
+  if (p.custom_bmr != null && p.custom_bmr > 0) {
+    bmrSource.textContent = '(Apple Watch)';
+    bmrSource.className = 'rec-note custom-bmr-badge';
+  } else {
+    bmrSource.textContent = '(公式计算)';
+    bmrSource.className = 'rec-note';
+  }
+
   $('#rec-tdee').textContent = p.tdee;
+  $('#rec-tdee-breakdown').textContent = `= ${p.tdeeBreakdown.bmr}(BMR) + ${p.tdeeBreakdown.activityBonus}(活动消耗) × ${p.tdeeBreakdown.multiplier}`;
   $('#rec-goal-kcal').textContent = p.goalCalories;
   $('#rec-protein').textContent = p.macros.protein_g;
   $('#rec-fat').textContent = p.macros.fat_g;
   $('#rec-carbs').textContent = p.macros.carbs_g;
   $('#rec-fiber').textContent = p.macros.fiber_g;
+
+  // Frame-adjusted weight
+  const fw = p.frameWeight;
+  $('#rec-weight-range').textContent = fw.min + ' - ' + fw.max + ' kg (理想 ' + fw.optimal + ' kg)';
 
   // BMI tag
   const tag = $('#rec-bmi-tag');

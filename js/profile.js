@@ -2,23 +2,34 @@
 
 function getProfileData() {
   const p = getProfile();
-  const bmr = calcBMR(p.gender, p.weight_kg, p.height_cm, p.age);
+
+  // Use custom BMR if set, otherwise calculate
+  const bmr = (p.custom_bmr != null && p.custom_bmr > 0)
+    ? p.custom_bmr
+    : calcBMR(p.gender, p.weight_kg, p.height_cm, p.age);
+
   const tdee = calcTDEE(bmr, p.activity_level);
+  const tdeeBreakdown = parseTDEEBreakdown(bmr, p.activity_level);
   const goalKcal = calcGoalCalories(tdee, p.goal);
   const macros = calcRecommendedMacros(goalKcal, p.weight_kg, p.goal);
   const bmi = calcBMI(p.weight_kg, p.height_cm);
   const bmiCategory = getBMICategory(bmi);
   const idealRange = calcIdealWeightRange(p.height_cm);
+  const frameWeight = calcFrameAdjustedWeight(p.height_cm, p.frame_size || 'medium');
+  const bodyFat = calcBodyFatRecommendation(p.gender, p.body_goal || 'fit');
 
   return {
     ...p,
     bmr,
     tdee,
+    tdeeBreakdown,
     goalCalories: goalKcal,
     macros,
     bmi,
     bmiCategory,
     idealRange,
+    frameWeight,
+    bodyFat,
   };
 }
 
@@ -29,8 +40,8 @@ function updateProfileField(field, value) {
 }
 
 function getGoalLabel(goal) {
-  const map = { cut: '减脂', bulk: '增肌', maintain: '维持', balanced: '综合' };
-  return map[goal] || '综合';
+  const map = { cut: '减脂', bulk: '增肌', maintain: '维持' };
+  return map[goal] || '维持';
 }
 
 function getActivityLabel(level) {

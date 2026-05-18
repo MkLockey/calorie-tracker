@@ -24,7 +24,6 @@ const GOAL_ADJUSTMENTS = {
   cut: -400,
   bulk: 400,
   maintain: 0,
-  balanced: 0,
 };
 
 function calcIntake(per100g, weightGrams) {
@@ -200,6 +199,62 @@ function calcIdealWeightRange(heightCm) {
     min: Math.round(18.5 * h * h),
     max: Math.round(24 * h * h),
   };
+}
+
+// Frame size adjusted weight range
+const FRAME_BMI = {
+  small: { min: 18.5, max: 22.0 },
+  medium: { min: 20.0, max: 23.5 },
+  large: { min: 21.5, max: 25.0 },
+};
+
+function calcFrameAdjustedWeight(heightCm, frameSize) {
+  const h = heightCm / 100;
+  const range = FRAME_BMI[frameSize] || FRAME_BMI.medium;
+  return {
+    min: Math.round(range.min * h * h),
+    max: Math.round(range.max * h * h),
+    optimal: Math.round(((range.min + range.max) / 2) * h * h),
+  };
+}
+
+// Body fat % recommendation by gender and body goal
+const BODY_FAT_RECOMMENDATIONS = {
+  male: {
+    fit: { min: 12, max: 15, label: '匀称' },
+    muscular: { min: 8, max: 12, label: '肌肉' },
+    lean: { min: 10, max: 14, label: '薄肌' },
+    sculpted: { min: 8, max: 12, label: '立体' },
+  },
+  female: {
+    fit: { min: 20, max: 23, label: '匀称' },
+    muscular: { min: 16, max: 20, label: '肌肉' },
+    lean: { min: 18, max: 22, label: '薄肌' },
+    sculpted: { min: 15, max: 19, label: '立体' },
+  },
+};
+
+function calcBodyFatRecommendation(gender, bodyGoal) {
+  const genderMap = BODY_FAT_RECOMMENDATIONS[gender] || BODY_FAT_RECOMMENDATIONS.male;
+  return genderMap[bodyGoal] || genderMap.fit;
+}
+
+function getBodyGoalLabel(goal) {
+  const map = { fit: '匀称', muscular: '肌肉', lean: '薄肌', sculpted: '立体' };
+  return map[goal] || '匀称';
+}
+
+function getFrameLabel(frame) {
+  const map = { small: '细骨架', medium: '中骨架', large: '大骨架' };
+  return map[frame] || '中骨架';
+}
+
+// TDEE breakdown for display
+function parseTDEEBreakdown(bmr, activityLevel) {
+  const mult = ACTIVITY_MULTIPLIERS[activityLevel] || 1.55;
+  const tdee = Math.round(bmr * mult);
+  const bonus = tdee - bmr;
+  return { bmr, activityBonus: bonus, tdee, multiplier: mult };
 }
 
 // ====== Progress ======

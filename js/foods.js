@@ -189,7 +189,7 @@ function searchFoods(query) {
     if (food.name.toLowerCase().includes(q) || food.category.includes(q)) {
       results.push(food);
     }
-    if (results.length >= 8) break;
+    if (results.length >= 15) break;
   }
   return results;
 }

@@ -325,7 +325,6 @@
               <button class="btn btn-sm goal-btn" data-goal="cut" id="goal-cut">🎯 减脂</button>
               <button class="btn btn-sm btn-outline goal-btn" data-goal="bulk" id="goal-bulk">💪 增肌</button>
               <button class="btn btn-sm btn-outline goal-btn" data-goal="maintain" id="goal-maintain">⚖️ 维持</button>
-              <button class="btn btn-sm btn-outline goal-btn" data-goal="balanced" id="goal-balanced">🔄 综合</button>
             </div>
           </div>
           <div class="pf-row">
@@ -337,6 +336,35 @@
               <option value="active">活跃 (6-7次/周)</option>
               <option value="very_active">高强度 (每天训练)</option>
             </select>
+          </div>
+          <div class="pf-row">
+            <label>骨架</label>
+            <div class="pf-options">
+              <button class="btn btn-sm frame-btn" data-frame="small" id="frame-small">细</button>
+              <button class="btn btn-sm btn-outline frame-btn" data-frame="medium" id="frame-medium">中</button>
+              <button class="btn btn-sm btn-outline frame-btn" data-frame="large" id="frame-large">大</button>
+            </div>
+          </div>
+          <div class="pf-row">
+            <label>体型目标</label>
+            <div class="pf-options wrap">
+              <button class="btn btn-sm bodygoal-btn" data-bodygoal="fit" id="bg-fit">匀称</button>
+              <button class="btn btn-sm btn-outline bodygoal-btn" data-bodygoal="lean" id="bg-lean">薄肌</button>
+              <button class="btn btn-sm btn-outline bodygoal-btn" data-bodygoal="muscular" id="bg-muscular">肌肉</button>
+              <button class="btn btn-sm btn-outline bodygoal-btn" data-bodygoal="sculpted" id="bg-sculpted">立体</button>
+            </div>
+          </div>
+          <div class="pf-row">
+            <label>自定义 BMR</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="use-custom-bmr">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="pf-row hidden" id="custom-bmr-row">
+            <label></label>
+            <input type="number" id="custom-bmr-value" placeholder="Apple Watch 静息能量" step="10" min="500" max="5000">
+            <span class="pf-unit">kcal/天</span>
           </div>
         </div>
       </div>
@@ -355,12 +383,21 @@
             <strong id="rec-weight-range">--</strong>
           </div>
           <div class="rec-row">
+            <span>推荐体脂率</span>
+            <strong id="rec-bodyfat">--</strong>
+          </div>
+          <div class="rec-row">
             <span>基础代谢 BMR</span>
             <strong id="rec-bmr">--</strong> kcal/天
+            <span class="rec-note" id="rec-bmr-source"></span>
           </div>
           <div class="rec-row">
             <span>每日总消耗 TDEE</span>
             <strong id="rec-tdee">--</strong> kcal/天
+          </div>
+          <div class="rec-row rec-tdee-detail">
+            <span></span>
+            <span class="rec-note" id="rec-tdee-breakdown"></span>
           </div>
           <div class="rec-row highlight">
             <span>目标摄入</span>
