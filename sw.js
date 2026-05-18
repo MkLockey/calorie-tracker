@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calorie-tracker-v1';
+const CACHE_NAME = 'calorie-tracker-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,8 @@ const ASSETS = [
   './js/calc.js',
   './js/parser.js',
   './js/ocr.js',
+  './js/foods.js',
+  './js/profile.js',
   './js/ui.js',
   './js/app.js',
   './manifest.json',
