@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="营养热量追踪 - 拍照识别营养成分表，计算每日营养摄入">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.svg">
+  <title>营养热量追踪</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ====== 记录页 ====== -->
+    <div id="page-log" class="page active">
+      <div class="page-header">
+        <h1>每日记录</h1>
+        <input type="date" id="log-date" class="date-picker">
+      </div>
+
+      <!-- 每日营养总结卡片 -->
+      <div class="summary-card">
+        <div class="summary-main">
+          <div class="summary-item highlight">
+            <span class="summary-value" id="sum-kcal">0</span>
+            <span class="summary-unit">kcal</span>
+            <span class="summary-label">热量</span>
+          </div>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="summary-value" id="sum-protein">0</span>
+            <span class="summary-unit">g</span>
+            <span class="summary-label">蛋白质</span>
+            <div class="progress-bar"><div class="progress-fill protein" id="bar-protein"></div></div>
+          </div>
+          <div class="summary-item">
+            <span class="summary-value" id="sum-fat">0</span>
+            <span class="summary-unit">g</span>
+            <span class="summary-label">脂肪</span>
+            <div class="progress-bar"><div class="progress-fill fat" id="bar-fat"></div></div>
+          </div>
+          <div class="summary-item">
+            <span class="summary-value" id="sum-carbs">0</span>
+            <span class="summary-unit">g</span>
+            <span class="summary-label">碳水</span>
+            <div class="progress-bar"><div class="progress-fill carbs" id="bar-carbs"></div></div>
+          </div>
+          <div class="summary-item">
+            <span class="summary-value" id="sum-sodium">0</span>
+            <span class="summary-unit">mg</span>
+            <span class="summary-label">钠</span>
+            <div class="progress-bar"><div class="progress-fill sodium" id="bar-sodium"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 食物列表 -->
+      <div class="food-list" id="food-list">
+        <div class="empty-state">
+          <span class="empty-icon">🍽️</span>
+          <p>还没有记录，去「添加」页拍照或手动输入吧</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 添加页 ====== -->
+    <div id="page-add" class="page">
+      <div class="page-header">
+        <h1>添加食物</h1>
+      </div>
+
+      <!-- 步骤 1: 上传图片 -->
+      <div id="add-step-upload" class="add-step">
+        <div class="upload-area">
+          <input type="file" id="file-input" accept="image/*" capture="environment" hidden>
+          <button class="btn btn-primary btn-lg" id="btn-camera">
+            <span class="btn-icon">📷</span> 拍照
+          </button>
+          <button class="btn btn-outline btn-lg" id="btn-gallery">
+            <span class="btn-icon">🖼️</span> 从相册选择
+          </button>
+          <button class="btn btn-text" id="btn-manual">
+            跳过拍照，手动输入
+          </button>
+        </div>
+      </div>
+
+      <!-- 步骤 2: 图片预览 & OCR -->
+      <div id="add-step-preview" class="add-step hidden">
+        <div class="preview-container">
+          <img id="preview-img" src="" alt="预览">
+          <button class="btn btn-secondary" id="btn-repick">重新选择</button>
+        </div>
+        <button class="btn btn-primary btn-lg btn-full" id="btn-ocr-start">
+          开始识别营养成分
+        </button>
+      </div>
+
+      <!-- 步骤 3: OCR 进行中 -->
+      <div id="add-step-ocr" class="add-step hidden">
+        <div class="ocr-loading">
+          <div class="spinner"></div>
+          <p id="ocr-status">正在加载识别引擎...</p>
+          <div class="ocr-progress-bar">
+            <div class="ocr-progress-fill" id="ocr-progress"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤 4 & 5: 识别结果 + 输入重量 -->
+      <div id="add-step-result" class="add-step hidden">
+        <div class="result-card">
+          <div class="form-group">
+            <label>食品名称</label>
+            <input type="text" id="food-name" placeholder="例如：奥利奥饼干">
+          </div>
+
+          <div class="form-group">
+            <label>营养成分（每 100g）</label>
+            <div class="nutrition-form">
+              <div class="nf-row">
+                <span class="nf-label">能量</span>
+                <input type="number" id="nf-energy" step="0.1" placeholder="0">
+                <span class="nf-unit">kJ</span>
+                <span class="nf-derived" id="nf-kcal"></span>
+              </div>
+              <div class="nf-row">
+                <span class="nf-label">蛋白质</span>
+                <input type="number" id="nf-protein" step="0.1" placeholder="0">
+                <span class="nf-unit">g</span>
+              </div>
+              <div class="nf-row">
+                <span class="nf-label">脂肪</span>
+                <input type="number" id="nf-fat" step="0.1" placeholder="0">
+                <span class="nf-unit">g</span>
+              </div>
+              <div class="nf-row">
+                <span class="nf-label">碳水</span>
+                <input type="number" id="nf-carbs" step="0.1" placeholder="0">
+                <span class="nf-unit">g</span>
+              </div>
+              <div class="nf-row">
+                <span class="nf-label">钠</span>
+                <input type="number" id="nf-sodium" step="0.1" placeholder="0">
+                <span class="nf-unit">mg</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>吃了多少？</label>
+            <div class="weight-input-row">
+              <input type="number" id="food-weight" step="0.1" placeholder="0" class="weight-input">
+              <span class="weight-unit">克 (g)</span>
+            </div>
+            <div class="quick-weights">
+              <button class="btn btn-sm btn-outline" data-weight="50">50g</button>
+              <button class="btn btn-sm btn-outline" data-weight="100">100g</button>
+              <button class="btn btn-sm btn-outline" data-weight="200">200g</button>
+              <button class="btn btn-sm btn-outline" data-weight="250">250g</button>
+              <button class="btn btn-sm btn-outline" data-weight="500">500g</button>
+            </div>
+          </div>
+
+          <!-- 预估摄入 -->
+          <div class="estimated-intake" id="estimated-intake">
+            <div class="est-title">预估摄入</div>
+            <div class="est-grid">
+              <span>热量: <strong id="est-kcal">0</strong> kcal</span>
+              <span>蛋白质: <strong id="est-protein">0</strong> g</span>
+              <span>脂肪: <strong id="est-fat">0</strong> g</span>
+              <span>碳水: <strong id="est-carbs">0</strong> g</span>
+              <span>钠: <strong id="est-sodium">0</strong> mg</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-lg btn-full" id="btn-save">保存记录</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 统计页 ====== -->
+    <div id="page-stats" class="page">
+      <div class="page-header">
+        <h1>营养统计</h1>
+      </div>
+
+      <div class="stats-period">
+        <button class="btn btn-sm btn-active" data-period="7">7天</button>
+        <button class="btn btn-sm btn-outline" data-period="30">30天</button>
+      </div>
+
+      <!-- 热量趋势图 -->
+      <div class="stats-card">
+        <h3>每日热量摄入趋势</h3>
+        <div class="chart-container" id="chart-calories">
+          <div class="empty-state small">
+            <p>数据不足，多记录几天再来看吧</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 平均摄入 -->
+      <div class="stats-card">
+        <h3>平均每日摄入</h3>
+        <div class="stats-avg-grid" id="stats-avg">
+          <div class="stat-avg-item">
+            <span class="stat-value" id="avg-kcal">--</span>
+            <span class="stat-label">热量 (kcal)</span>
+          </div>
+          <div class="stat-avg-item">
+            <span class="stat-value" id="avg-protein">--</span>
+            <span class="stat-label">蛋白质 (g)</span>
+          </div>
+          <div class="stat-avg-item">
+            <span class="stat-value" id="avg-fat">--</span>
+            <span class="stat-label">脂肪 (g)</span>
+          </div>
+          <div class="stat-avg-item">
+            <span class="stat-value" id="avg-carbs">--</span>
+            <span class="stat-label">碳水 (g)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 底部导航 ====== -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-page="log">
+        <span class="nav-icon">📋</span>
+        <span class="nav-text">记录</span>
+      </button>
+      <button class="nav-btn" data-page="add">
+        <span class="nav-icon">➕</span>
+        <span class="nav-text">添加</span>
+      </button>
+      <button class="nav-btn" data-page="stats">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text">统计</span>
+      </button>
+    </nav>
+
+    <!-- 提示消息 -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/calc.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/ocr.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
