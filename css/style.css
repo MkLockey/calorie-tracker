@@ -442,18 +442,13 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 0.82rem;
   text-align: center;
 }
-.pf-period-target {
-  font-size: 0.78rem;
-  color: var(--primary);
-  margin-left: 4px;
-  font-weight: 500;
-}
 .pf-target-period-row { align-items: flex-start; padding-top: 2px; }
 .pf-period-divider {
   color: var(--border);
   margin: 0 2px;
   font-size: 0.85rem;
 }
+.pf-input-sm { width: 70px; }
 
 /* ====== Buttons ====== */
 .btn {

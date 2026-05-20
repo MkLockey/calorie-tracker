@@ -143,7 +143,6 @@ function updateTargetFromPeriod() {
   const str = toDateStr(target);
   $('#pf-target-date').value = str;
   updatePfTargetDateBtn();
-  $('#pf-period-target-date').textContent = str;
   updateProfileField('target_date', str);
   updateProfileResults();
 }
@@ -321,7 +320,6 @@ function bindCalendar() {
         // Clear profile period inputs since date was set directly
         $('#pf-target-months').value = '';
         $('#pf-target-days').value = '';
-        $('#pf-period-target-date').textContent = '';
         updatePfTargetDateBtn();
         updateProfileField('target_date', date);
         updateProfileResults();
@@ -329,7 +327,6 @@ function bindCalendar() {
         $('#pf-target-date').value = '';
         $('#pf-target-months').value = '';
         $('#pf-target-days').value = '';
-        $('#pf-period-target-date').textContent = '';
         updatePfTargetDateBtn();
         updateProfileField('target_date', null);
         updateProfileResults();
@@ -1197,10 +1194,13 @@ function bindProfilePage() {
   // Custom BMR toggle
   $('#use-custom-bmr').addEventListener('change', () => {
     const checked = $('#use-custom-bmr').checked;
-    $('#custom-bmr-row').classList.toggle('hidden', !checked);
+    const bmrInput = $('#custom-bmr-value');
+    const bmrUnit = bmrInput.nextElementSibling;
+    bmrInput.classList.toggle('hidden', !checked);
+    if (bmrUnit) bmrUnit.classList.toggle('hidden', !checked);
     updateProfileField('use_custom_bmr', checked);
     if (checked) {
-      const existingVal = parseFloat($('#custom-bmr-value').value);
+      const existingVal = parseFloat(bmrInput.value);
       if (!existingVal || existingVal <= 0) {
         const formulaBmr = calcBMR(
           getProfile().gender,
@@ -1208,12 +1208,12 @@ function bindProfilePage() {
           getProfile().height_cm,
           getProfile().age
         );
-        $('#custom-bmr-value').value = formulaBmr;
+        bmrInput.value = formulaBmr;
         updateProfileField('custom_bmr', formulaBmr);
       }
     } else {
       updateProfileField('custom_bmr', null);
-      $('#custom-bmr-value').value = '';
+      bmrInput.value = '';
     }
     updateProfileResults();
   });
@@ -1254,7 +1254,6 @@ function bindProfilePage() {
   $('#pf-target-date').addEventListener('change', () => {
     $('#pf-target-months').value = '';
     $('#pf-target-days').value = '';
-    $('#pf-period-target-date').textContent = '';
     updatePfTargetDateBtn();
     updateProfileField('target_date', $('#pf-target-date').value || null);
     updateProfileResults();

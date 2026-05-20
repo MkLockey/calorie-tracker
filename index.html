@@ -510,12 +510,12 @@
           </div>
           <div class="pf-row">
             <label>体脂率</label>
-            <input type="number" id="pf-bodyfat" placeholder="自动计算" step="0.1" min="3" max="55">
-            <span class="pf-unit">%</span>
             <label class="toggle-switch">
               <input type="checkbox" id="use-custom-bodyfat">
               <span class="toggle-slider"></span>
             </label>
+            <input type="number" id="pf-bodyfat" placeholder="自动计算" step="0.1" min="3" max="55">
+            <span class="pf-unit">%</span>
           </div>
           <div class="pf-row">
             <label>自定义 BMR</label>
@@ -523,10 +523,7 @@
               <input type="checkbox" id="use-custom-bmr">
               <span class="toggle-slider"></span>
             </label>
-          </div>
-          <div class="pf-row hidden" id="custom-bmr-row">
-            <label></label>
-            <input type="number" id="custom-bmr-value" placeholder="Apple Watch 静息能量" step="10" min="500" max="5000">
+            <input type="number" id="custom-bmr-value" class="pf-input-sm" placeholder="Apple Watch 静息能量" step="10" min="500" max="5000">
             <span class="pf-unit">kcal/天</span>
           </div>
           <div class="pf-row">
@@ -544,7 +541,6 @@
               <span>个月</span>
               <input type="number" id="pf-target-days" class="pf-period-input" placeholder="0" min="0" max="999" step="1">
               <span>天</span>
-              <span class="pf-period-target" id="pf-period-target-date"></span>
             </div>
           </div>
           <div class="pf-row">

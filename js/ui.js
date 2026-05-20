@@ -866,7 +866,10 @@ async function renderProfilePage() {
   const useCustom = p.use_custom_bmr === true;
   $('#use-custom-bmr').checked = useCustom;
   $('#custom-bmr-value').value = (useCustom && p.custom_bmr) ? p.custom_bmr : '';
-  $('#custom-bmr-row').classList.toggle('hidden', !useCustom);
+  const bmrInput = $('#custom-bmr-value');
+  const bmrUnit = bmrInput.nextElementSibling;
+  bmrInput.classList.toggle('hidden', !useCustom);
+  if (bmrUnit) bmrUnit.classList.toggle('hidden', !useCustom);
 
   // Target weight & date
   $('#pf-target-weight').value = p.target_weight_kg || '';
@@ -875,7 +878,6 @@ async function renderProfilePage() {
   // Clear period inputs on load (date from saved profile, not from period)
   if ($('#pf-target-months')) $('#pf-target-months').value = '';
   if ($('#pf-target-days')) $('#pf-target-days').value = '';
-  if ($('#pf-period-target-date')) $('#pf-period-target-date').textContent = '';
   $('#pf-water-goal').value = p.water_goal_ml || 2000;
 
   // Body fat — always show calculated value, only editable when custom toggle ON
