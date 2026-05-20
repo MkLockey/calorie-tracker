@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calorie-tracker-v3';
+const CACHE_NAME = 'calorie-tracker-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -12,8 +12,9 @@ const ASSETS = [
   './js/ui.js',
   './js/app.js',
   './manifest.json',
-  './icons/icon-192.svg',
-  './icons/icon-512.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/icon-512-maskable.png',
 ];
 
 // CDN resources (cached separately, might be large)
@@ -40,6 +41,9 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
+
+  // Only handle http/https requests
+  if (!url.protocol.startsWith('http')) return;
 
   // CDN resources - network first, cache fallback
   if (url.hostname.includes('jsdelivr.net') || url.hostname.includes('cdn.jsdelivr.net')) {

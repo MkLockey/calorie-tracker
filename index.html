@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#1a1a2e">
   <meta name="description" content="营养热量追踪 - 拍照识别营养成分表，计算每日营养摄入">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon-192.svg">
+  <link rel="icon" href="icons/icon-192.png">
   <title>营养热量追踪</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -16,38 +16,48 @@
     <div id="page-log" class="page active">
       <div class="page-header">
         <h1>每日记录</h1>
-        <input type="date" id="log-date" class="date-picker">
+        <div class="header-actions">
+          <input type="date" id="log-date" class="date-picker">
+        </div>
       </div>
 
       <!-- 热量缺口卡片 -->
       <div class="deficit-card" id="deficit-card">
         <div class="deficit-header" id="deficit-toggle">
-          <span>🔥 今日热量缺口</span>
+          <span>🔥 热量缺口</span>
+          <span class="deficit-summary" id="deficit-summary"></span>
           <span class="deficit-arrow" id="deficit-arrow">▼</span>
         </div>
         <div class="deficit-body" id="deficit-body">
-          <div class="deficit-row">
-            <span>摄入</span>
-            <strong id="def-intake">0</strong> kcal
+          <div class="deficit-row deficit-intake-tdee">
+            <div class="deficit-half">
+              <span>今日总摄入量</span>
+              <strong id="def-intake">0</strong> kcal
+            </div>
+            <div class="deficit-half">
+              <span>今日总消耗 (TDEE)</span>
+              <strong id="def-tdee">--</strong> kcal
+            </div>
           </div>
-          <div class="deficit-row">
-            <span>基础代谢 (BMR)</span>
-            <strong id="def-bmr">--</strong> kcal
-          </div>
-          <div class="deficit-row deficit-exercise">
-            <span>运动消耗</span>
-            <input type="number" id="exercise-input" placeholder="运动热量" step="10" min="0">
+          <div class="deficit-row deficit-exercise deficit-centered">
+            <span>额外运动消耗</span>
+            <input type="number" id="exercise-input" placeholder="今日运动消耗" step="10" min="0">
             <span>kcal</span>
+            <span class="exercise-hint" id="exercise-hint"></span>
           </div>
-          <div class="deficit-row">
-            <span>总消耗</span>
-            <strong id="def-tdee">--</strong> kcal
+          <div class="deficit-row deficit-centered">
+            <span>今日总消耗</span>
+            <strong id="def-total-out">--</strong> kcal
           </div>
           <div class="deficit-divider"></div>
-          <div class="deficit-row deficit-result">
+          <div class="deficit-row deficit-result deficit-centered">
             <span>热量缺口</span>
             <strong id="def-gap">--</strong> kcal
             <span id="def-label"></span>
+          </div>
+          <div class="deficit-row deficit-target deficit-centered hidden" id="def-target-row">
+            <span>目标所需差值</span>
+            <strong id="def-target-gap">--</strong> kcal/天
           </div>
         </div>
       </div>
@@ -63,51 +73,98 @@
         </div>
         <div class="summary-grid">
           <div class="summary-item">
-            <span class="summary-value" id="sum-protein">0</span>
-            <span class="summary-unit">g</span>
-            <span class="summary-label">蛋白质 <span class="nrv-tag" id="nrv-protein"></span></span>
+            <div class="summary-value-row">
+              <span class="summary-value" id="sum-protein">0</span>
+              <span class="summary-unit">g</span>
+              <span class="nrv-tag" id="nrv-protein"></span>
+            </div>
+            <span class="summary-label">蛋白质</span>
             <div class="progress-bar"><div class="progress-fill protein" id="bar-protein"></div></div>
+            <span class="summary-rec" id="log-rec-protein">推荐 --g</span>
           </div>
           <div class="summary-item">
-            <span class="summary-value" id="sum-fat">0</span>
-            <span class="summary-unit">g</span>
-            <span class="summary-label">脂肪 <span class="nrv-tag" id="nrv-fat"></span></span>
+            <div class="summary-value-row">
+              <span class="summary-value" id="sum-fat">0</span>
+              <span class="summary-unit">g</span>
+              <span class="nrv-tag" id="nrv-fat"></span>
+            </div>
+            <span class="summary-label">脂肪</span>
             <div class="progress-bar"><div class="progress-fill fat" id="bar-fat"></div></div>
+            <span class="summary-rec" id="log-rec-fat">推荐 --g</span>
           </div>
           <div class="summary-item">
-            <span class="summary-value" id="sum-carbs">0</span>
-            <span class="summary-unit">g</span>
-            <span class="summary-label">碳水 <span class="nrv-tag" id="nrv-carbs"></span></span>
+            <div class="summary-value-row">
+              <span class="summary-value" id="sum-carbs">0</span>
+              <span class="summary-unit">g</span>
+              <span class="nrv-tag" id="nrv-carbs"></span>
+            </div>
+            <span class="summary-label">碳水</span>
             <div class="progress-bar"><div class="progress-fill carbs" id="bar-carbs"></div></div>
+            <span class="summary-rec" id="log-rec-carbs">推荐 --g</span>
           </div>
           <div class="summary-item">
-            <span class="summary-value" id="sum-fiber">0</span>
-            <span class="summary-unit">g</span>
-            <span class="summary-label">纤维 <span class="nrv-tag" id="nrv-fiber"></span></span>
+            <div class="summary-value-row">
+              <span class="summary-value" id="sum-fiber">0</span>
+              <span class="summary-unit">g</span>
+              <span class="nrv-tag" id="nrv-fiber"></span>
+            </div>
+            <span class="summary-label">膳食纤维</span>
             <div class="progress-bar"><div class="progress-fill fiber" id="bar-fiber"></div></div>
+            <span class="summary-rec" id="log-rec-fiber">推荐 --g</span>
           </div>
           <div class="summary-item">
-            <span class="summary-value" id="sum-sodium">0</span>
-            <span class="summary-unit">mg</span>
-            <span class="summary-label">钠 <span class="nrv-tag" id="nrv-sodium"></span></span>
+            <div class="summary-value-row">
+              <span class="summary-value" id="sum-sodium">0</span>
+              <span class="summary-unit">mg</span>
+              <span class="nrv-tag" id="nrv-sodium"></span>
+            </div>
+            <span class="summary-label">钠</span>
             <div class="progress-bar"><div class="progress-fill sodium" id="bar-sodium"></div></div>
+            <span class="summary-rec" id="log-rec-sodium">推荐 --mg</span>
+          </div>
+          <div class="summary-item">
+            <div class="summary-value-row">
+              <span class="summary-value" id="sum-water">0</span>
+              <span class="summary-unit">ml</span>
+              <span class="nrv-tag" id="nrv-water"></span>
+            </div>
+            <span class="summary-label">饮水量</span>
+            <div class="progress-bar"><div class="progress-fill water" id="bar-water"></div></div>
+            <span class="summary-rec" id="log-rec-water">目标 --ml</span>
           </div>
         </div>
+      </div>
+
+      <!-- 饮水 -->
+      <div class="water-row">
+        <span class="water-label">💧 饮水</span>
+        <input type="number" id="water-input" placeholder="ml" step="50" min="0" max="10000">
+        <button class="btn btn-sm btn-outline water-quick" data-ml="200">+200ml</button>
+        <button class="btn btn-sm btn-outline water-quick" data-ml="300">+300ml</button>
+        <button class="btn btn-sm btn-outline water-quick" data-ml="500">+500ml</button>
       </div>
 
       <div class="food-list" id="food-list">
         <div class="empty-state">
           <span class="empty-icon">🍽️</span>
-          <p>还没有记录，去「添加」页拍照或手动输入吧</p>
+          <p>还没有记录，点击右上角 ＋ 添加吧</p>
         </div>
+      </div>
+
+      <div class="reuse-bar">
+        <button class="btn btn-sm btn-outline" id="btn-reuse-yesterday">📋 复用昨天菜单</button>
+        <button class="btn btn-sm btn-outline" id="btn-reuse-lastweek">📋 复用上周同天</button>
       </div>
     </div>
 
-    <!-- ====== 添加页 ====== -->
-    <div id="page-add" class="page">
-      <div class="page-header">
+    <!-- ====== 添加食物覆盖层 ====== -->
+    <div id="add-overlay" class="overlay hidden">
+      <div class="overlay-header">
+        <button class="btn btn-text" id="btn-close-add">✕ 关闭</button>
         <h1>添加食物</h1>
+        <span style="width:50px"></span>
       </div>
+      <div class="overlay-body">
 
       <!-- 搜索常见食物 -->
       <div class="food-search" id="food-search">
@@ -165,8 +222,24 @@
           <button class="btn btn-text btn-back" id="btn-back-to-upload">← 返回</button>
 
           <div class="form-group">
+            <img id="result-preview-img" src="" alt="扫描图片" style="width:100%;max-height:200px;object-fit:contain;border-radius:8px;margin-bottom:8px;background:var(--img-preview-bg);display:none;">
+          </div>
+
+          <div class="form-group">
             <label>食品名称</label>
             <input type="text" id="food-name" placeholder="例如：奥利奥饼干">
+          </div>
+
+          <div class="form-group">
+            <label>餐食类型</label>
+            <div class="pf-options">
+              <button class="btn btn-sm meal-btn btn-active" data-meal="breakfast">🌅 早餐</button>
+              <button class="btn btn-sm btn-outline meal-btn" data-meal="lunch">☀️ 午餐</button>
+              <button class="btn btn-sm btn-outline meal-btn" data-meal="dinner">🌙 晚餐</button>
+              <button class="btn btn-sm btn-outline meal-btn" data-meal="snack">🍪 加餐</button>
+              <button class="btn btn-sm btn-outline meal-btn" data-meal="snack_food">🍿 零食</button>
+              <button class="btn btn-sm btn-outline meal-btn" data-meal="other">📌 其他</button>
+            </div>
           </div>
 
           <div class="form-group">
@@ -174,42 +247,47 @@
             <div class="nutrition-form">
               <div class="nf-row">
                 <span class="nf-label">能量</span>
-                <input type="number" id="nf-energy" step="0.1" placeholder="0">
+                <input type="number" min="0" id="nf-energy" step="0.1" placeholder="0">
                 <span class="nf-unit">kJ</span>
                 <span class="nf-derived" id="nf-kcal"></span>
               </div>
               <div class="nf-row">
                 <span class="nf-label">蛋白质</span>
-                <input type="number" id="nf-protein" step="0.1" placeholder="0">
+                <input type="number" min="0" id="nf-protein" step="0.1" placeholder="0">
                 <span class="nf-unit">g</span>
               </div>
               <div class="nf-row">
                 <span class="nf-label">脂肪</span>
-                <input type="number" id="nf-fat" step="0.1" placeholder="0">
+                <input type="number" min="0" id="nf-fat" step="0.1" placeholder="0">
                 <span class="nf-unit">g</span>
               </div>
               <div class="nf-row">
                 <span class="nf-label">碳水</span>
-                <input type="number" id="nf-carbs" step="0.1" placeholder="0">
+                <input type="number" min="0" id="nf-carbs" step="0.1" placeholder="0">
                 <span class="nf-unit">g</span>
               </div>
               <div class="nf-row">
                 <span class="nf-label">膳食纤维</span>
-                <input type="number" id="nf-fiber" step="0.1" placeholder="0">
+                <input type="number" min="0" id="nf-fiber" step="0.1" placeholder="0">
                 <span class="nf-unit">g</span>
               </div>
               <div class="nf-row">
                 <span class="nf-label">钠</span>
-                <input type="number" id="nf-sodium" step="0.1" placeholder="0">
+                <input type="number" min="0" id="nf-sodium" step="0.1" placeholder="0">
                 <span class="nf-unit">mg</span>
               </div>
             </div>
           </div>
 
           <div class="form-group">
+            <label>备注</label>
+            <input type="text" id="food-notes" placeholder="例如：品牌、口味、产地等" maxlength="100">
+          </div>
+
+          <div class="form-group">
             <label>吃了多少？</label>
             <div class="weight-input-row">
-              <input type="number" id="food-weight" step="0.1" placeholder="0" class="weight-input">
+              <input type="number" id="food-weight" step="0.1" min="0" placeholder="0" class="weight-input">
               <span class="weight-unit">克 (g)</span>
             </div>
             <div class="quick-weights">
@@ -240,6 +318,29 @@
         </div>
       </div>
     </div>
+  </div>
+
+    <!-- ====== 仓库页 ====== -->
+    <div id="page-pantry" class="page">
+      <div class="page-header">
+        <h1>我的仓库</h1>
+        <button class="btn btn-sm btn-primary" id="btn-add-pantry-food">＋ 添加</button>
+      </div>
+      <div class="food-search" id="pantry-search">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="pantry-search-input" placeholder="搜索仓库中的食物..." autocomplete="off">
+          <button class="search-clear hidden" id="pantry-search-clear">✕</button>
+        </div>
+      </div>
+      <div id="user-db-banner" class="user-db-banner hidden">📥 用户收录食物库</div>
+      <div class="food-list" id="pantry-list">
+        <div class="empty-state">
+          <span class="empty-icon">📦</span>
+          <p>仓库是空的<br>在记录页添加食物后，可以保存到仓库</p>
+        </div>
+      </div>
+    </div>
 
     <!-- ====== 统计页 ====== -->
     <div id="page-stats" class="page">
@@ -252,12 +353,22 @@
         <button class="btn btn-sm btn-outline" data-period="30">30天</button>
       </div>
 
+      <div class="stats-nutrient-select">
+        <button class="btn btn-xs btn-active nutrient-btn" data-nutrient="energy_kcal">🔥 热量</button>
+        <button class="btn btn-xs btn-outline nutrient-btn" data-nutrient="protein_g">🥩 蛋白质</button>
+        <button class="btn btn-xs btn-outline nutrient-btn" data-nutrient="fat_g">🧈 脂肪</button>
+        <button class="btn btn-xs btn-outline nutrient-btn" data-nutrient="carbs_g">🍚 碳水</button>
+        <button class="btn btn-xs btn-outline nutrient-btn" data-nutrient="fiber_g">🥬 纤维</button>
+        <button class="btn btn-xs btn-outline nutrient-btn" data-nutrient="sodium_mg">🧂 钠</button>
+      </div>
+
       <div class="stats-card">
         <div class="chart-header">
-          <h3>每日热量摄入趋势</h3>
+          <h3 id="chart-title">每日热量摄入趋势</h3>
           <div class="chart-toggle">
             <button class="btn btn-xs btn-active chart-type-btn" data-chart="bar">📊 柱形</button>
             <button class="btn btn-xs btn-outline chart-type-btn" data-chart="line">📈 折线</button>
+            <button class="btn btn-xs btn-outline" id="btn-expand-chart" title="查看总览">🔍</button>
           </div>
         </div>
         <div class="chart-container" id="chart-calories">
@@ -288,18 +399,54 @@
           </div>
         </div>
       </div>
+
+      <div class="stats-card hidden" id="stats-deficit-card">
+        <h3>热量缺口汇总</h3>
+        <div class="deficit-body">
+          <div class="deficit-row">
+            <span>目标所需总缺口</span>
+            <strong id="stats-target-deficit">--</strong> kcal
+          </div>
+          <div class="deficit-row">
+            <span>实际总缺口</span>
+            <strong id="stats-actual-deficit">--</strong> kcal
+          </div>
+          <div class="deficit-divider"></div>
+          <div class="deficit-row deficit-result">
+            <span>缺口差值</span>
+            <strong id="stats-deficit-gap">--</strong> kcal
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-card" id="stats-nutrient-card">
+        <div class="chart-header">
+          <h3>营养素对比 (平均值 vs 推荐值)</h3>
+        </div>
+        <div class="nutrient-compare" id="nutrient-compare">
+          <div class="empty-state small"><p>数据不足</p></div>
+        </div>
+      </div>
     </div>
 
     <!-- ====== 我的页面 ====== -->
     <div id="page-profile" class="page">
       <div class="page-header">
         <h1>我的</h1>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:0.78rem;color:var(--text-secondary);">深色模式</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </div>
 
       <!-- 身体参数 -->
-      <div class="profile-section">
-        <h3>身体参数</h3>
-        <div class="profile-form">
+      <div class="profile-section" id="body-params-section">
+        <h3 id="body-params-toggle" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">身体参数 <span class="deficit-arrow" id="body-params-arrow" style="font-size:0.7rem;">▼</span></h3>
+        <div class="body-params-summary hidden" id="body-params-summary"></div>
+        <div class="profile-form" id="body-params-body">
           <div class="pf-row">
             <label>性别</label>
             <div class="pf-options">
@@ -325,16 +472,17 @@
               <button class="btn btn-sm goal-btn" data-goal="cut" id="goal-cut">🎯 减脂</button>
               <button class="btn btn-sm btn-outline goal-btn" data-goal="bulk" id="goal-bulk">💪 增肌</button>
               <button class="btn btn-sm btn-outline goal-btn" data-goal="maintain" id="goal-maintain">⚖️ 维持</button>
+              <button class="btn btn-sm btn-outline goal-btn" data-goal="recomp" id="goal-recomp">🔄 混合</button>
             </div>
           </div>
           <div class="pf-row">
-            <label>活动水平</label>
+            <label id="pf-activity-label">活动水平</label>
             <select id="pf-activity" class="pf-select">
-              <option value="sedentary">久坐不动</option>
-              <option value="light">轻度活动 (1-2次/周)</option>
-              <option value="moderate" selected>中度活动 (3-5次/周)</option>
-              <option value="active">活跃 (6-7次/周)</option>
-              <option value="very_active">高强度 (每天训练)</option>
+              <option value="very_low">极少活动/长时间躺坐</option>
+              <option value="sedentary_office">久坐办公/日均步数较低</option>
+              <option value="normal_life" selected>普通生活/有一定走动</option>
+              <option value="high_steps">走动较多/长时间站立</option>
+              <option value="physical_labor">体力劳动/高日常活动</option>
             </select>
           </div>
           <div class="pf-row">
@@ -350,9 +498,19 @@
             <div class="pf-options wrap">
               <button class="btn btn-sm bodygoal-btn" data-bodygoal="fit" id="bg-fit">匀称</button>
               <button class="btn btn-sm btn-outline bodygoal-btn" data-bodygoal="lean" id="bg-lean">薄肌</button>
-              <button class="btn btn-sm btn-outline bodygoal-btn" data-bodygoal="muscular" id="bg-muscular">肌肉</button>
               <button class="btn btn-sm btn-outline bodygoal-btn" data-bodygoal="sculpted" id="bg-sculpted">立体</button>
+              <button class="btn btn-sm btn-outline bodygoal-btn" data-bodygoal="muscular" id="bg-muscular">肌肉</button>
+              <button class="btn btn-sm btn-outline bodygoal-btn" data-bodygoal="skinny" id="bg-skinny">偏瘦</button>
             </div>
+          </div>
+          <div class="pf-row">
+            <label>体脂率</label>
+            <input type="number" id="pf-bodyfat" placeholder="自动计算" step="0.1" min="3" max="55">
+            <span class="pf-unit">%</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="use-custom-bodyfat">
+              <span class="toggle-slider"></span>
+            </label>
           </div>
           <div class="pf-row">
             <label>自定义 BMR</label>
@@ -366,6 +524,20 @@
             <input type="number" id="custom-bmr-value" placeholder="Apple Watch 静息能量" step="10" min="500" max="5000">
             <span class="pf-unit">kcal/天</span>
           </div>
+          <div class="pf-row">
+            <label>目标体重</label>
+            <input type="number" id="pf-target-weight" placeholder="留空自动计算" step="0.1" min="30" max="200">
+            <span class="pf-unit">kg</span>
+          </div>
+          <div class="pf-row">
+            <label>目标日期</label>
+            <input type="date" id="pf-target-date" class="pf-select">
+          </div>
+          <div class="pf-row">
+            <label>饮水目标</label>
+            <input type="number" id="pf-water-goal" value="2000" step="100" min="500" max="10000">
+            <span class="pf-unit">ml/天</span>
+          </div>
         </div>
       </div>
 
@@ -377,6 +549,10 @@
             <span>BMI</span>
             <strong id="rec-bmi">--</strong>
             <span class="rec-tag" id="rec-bmi-tag"></span>
+          </div>
+          <div class="rec-row">
+            <span>健康体重</span>
+            <strong id="rec-bmi-range">--</strong>
           </div>
           <div class="rec-row">
             <span>推荐体重</span>
@@ -392,37 +568,43 @@
             <span class="rec-note" id="rec-bmr-source"></span>
           </div>
           <div class="rec-row">
-            <span>每日总消耗 TDEE</span>
+            <span>今日总消耗 TDEE</span>
             <strong id="rec-tdee">--</strong> kcal/天
           </div>
           <div class="rec-row rec-tdee-detail">
-            <span></span>
             <span class="rec-note" id="rec-tdee-breakdown"></span>
           </div>
-          <div class="rec-row highlight">
-            <span>目标摄入</span>
-            <strong id="rec-goal-kcal">--</strong> kcal/天
+          <div class="rec-calories-card">
+            <div class="rec-calories-title">推荐摄入</div>
+            <div class="rec-calories-main"><strong id="rec-goal-kcal">--</strong> kcal/天</div>
+            <div class="rec-calories-subtitle" id="rec-goal-diff">较维持消耗 -- kcal/天</div>
+            <div class="rec-calories-note">由蛋白质、脂肪、碳水推荐值汇总得到</div>
           </div>
+          <div class="rec-delta-compare hidden" id="rec-delta-compare"></div>
           <div class="rec-macros">
             <div class="rec-macro-item">蛋白质<br><strong id="rec-protein">--</strong>g</div>
             <div class="rec-macro-item">脂肪<br><strong id="rec-fat">--</strong>g</div>
             <div class="rec-macro-item">碳水<br><strong id="rec-carbs">--</strong>g</div>
-            <div class="rec-macro-item">纤维<br><strong id="rec-fiber">--</strong>g</div>
+            <div class="rec-macro-item">膳食纤维<br><strong id="rec-fiber">--</strong>g</div>
           </div>
+          <div class="rec-warnings hidden" id="rec-warnings"></div>
           <button class="btn btn-primary btn-full" id="btn-save-profile">保存参数</button>
         </div>
       </div>
     </div>
 
     <!-- ====== 底部导航 ====== -->
-    <nav class="bottom-nav four-tabs">
+    <nav class="bottom-nav">
       <button class="nav-btn active" data-page="log">
         <span class="nav-icon">📋</span>
         <span class="nav-text">记录</span>
       </button>
-      <button class="nav-btn" data-page="add">
-        <span class="nav-icon">➕</span>
-        <span class="nav-text">添加</span>
+      <button class="nav-btn" data-page="pantry">
+        <span class="nav-icon">📦</span>
+        <span class="nav-text">仓库</span>
+      </button>
+      <button class="nav-btn nav-btn-add" id="btn-add-food">
+        <span class="nav-icon nav-icon-add">＋</span>
       </button>
       <button class="nav-btn" data-page="stats">
         <span class="nav-icon">📊</span>
@@ -435,6 +617,18 @@
     </nav>
 
     <div class="toast" id="toast"></div>
+
+    <!-- 图表总览覆盖层 -->
+    <div id="chart-expand-overlay" class="overlay hidden">
+      <div class="overlay-header">
+        <button class="btn btn-text" id="btn-close-expand">✕ 关闭</button>
+        <h1 id="expand-chart-title">图表总览</h1>
+        <span style="width:50px"></span>
+      </div>
+      <div class="overlay-body chart-expand-body" id="chart-expand-body">
+        <div class="empty-state"><p>暂无图表数据</p></div>
+      </div>
+    </div>
   </div>
 
   <script src="js/storage.js"></script>

@@ -165,8 +165,63 @@ const FOOD_DB = [
   { name: "开心果", category: "坚果", emoji: "🌰", per100g: { energy_kj: 2343, protein_g: 20.2, fat_g: 44.9, carbs_g: 21.4, sodium_mg: 10.0, fiber_g: 10.3 } },
   { name: "黑巧克力", category: "坚果", emoji: "🍫", per100g: { energy_kj: 2280, protein_g: 7.8, fat_g: 34.2, carbs_g: 52.0, sodium_mg: 10.0, fiber_g: 8.0 } },
   { name: "牛奶巧克力", category: "坚果", emoji: "🍫", per100g: { energy_kj: 2243, protein_g: 7.6, fat_g: 29.7, carbs_g: 59.4, sodium_mg: 100.0, fiber_g: 3.4 } },
-  { name: "薯片", category: "坚果", emoji: "🍟", per100g: { energy_kj: 2238, protein_g: 5.9, fat_g: 33.9, carbs_g: 52.9, sodium_mg: 528.0, fiber_g: 3.8 } },
-  { name: "饼干", category: "坚果", emoji: "🍪", per100g: { energy_kj: 1812, protein_g: 7.5, fat_g: 14.2, carbs_g: 70.2, sodium_mg: 204.0, fiber_g: 1.4 } },
+  { name: "薯片", category: "零食", emoji: "🍟", per100g: { energy_kj: 2238, protein_g: 5.9, fat_g: 33.9, carbs_g: 52.9, sodium_mg: 528.0, fiber_g: 3.8 } },
+  { name: "饼干", category: "零食", emoji: "🍪", per100g: { energy_kj: 1812, protein_g: 7.5, fat_g: 14.2, carbs_g: 70.2, sodium_mg: 204.0, fiber_g: 1.4 } },
+
+  // ====== 零食类 ======
+  { name: "辣条", category: "零食", emoji: "🌶️", per100g: { energy_kj: 1836, protein_g: 8.5, fat_g: 22.0, carbs_g: 54.0, sodium_mg: 2500.0, fiber_g: 1.0 } },
+  { name: "牛肉干", category: "零食", emoji: "🥩", per100g: { energy_kj: 1400, protein_g: 45.0, fat_g: 6.0, carbs_g: 20.0, sodium_mg: 1500.0, fiber_g: 0 } },
+  { name: "猪肉脯", category: "零食", emoji: "🥓", per100g: { energy_kj: 1632, protein_g: 28.0, fat_g: 12.0, carbs_g: 42.0, sodium_mg: 1200.0, fiber_g: 0 } },
+  { name: "鱿鱼丝", category: "零食", emoji: "🦑", per100g: { energy_kj: 1310, protein_g: 42.0, fat_g: 3.5, carbs_g: 24.0, sodium_mg: 1800.0, fiber_g: 0 } },
+  { name: "火腿肠", category: "零食", emoji: "🌭", per100g: { energy_kj: 887, protein_g: 11.5, fat_g: 14.0, carbs_g: 6.5, sodium_mg: 1100.0, fiber_g: 0 } },
+  { name: "果冻", category: "零食", emoji: "🍮", per100g: { energy_kj: 280, protein_g: 0, fat_g: 0, carbs_g: 16.0, sodium_mg: 35.0, fiber_g: 0 } },
+  { name: "冰淇淋", category: "零食", emoji: "🍦", per100g: { energy_kj: 757, protein_g: 3.0, fat_g: 8.5, carbs_g: 23.0, sodium_mg: 60.0, fiber_g: 0 } },
+  { name: "雪糕", category: "零食", emoji: "🍧", per100g: { energy_kj: 711, protein_g: 2.5, fat_g: 7.0, carbs_g: 25.0, sodium_mg: 50.0, fiber_g: 0 } },
+  { name: "奶油蛋糕", category: "零食", emoji: "🎂", per100g: { energy_kj: 1586, protein_g: 5.8, fat_g: 18.6, carbs_g: 47.0, sodium_mg: 190.0, fiber_g: 0.5 } },
+  { name: "夹心饼干", category: "零食", emoji: "🍪", per100g: { energy_kj: 2010, protein_g: 6.0, fat_g: 22.0, carbs_g: 66.0, sodium_mg: 280.0, fiber_g: 1.0 } },
+  { name: "威化饼干", category: "零食", emoji: "🧇", per100g: { energy_kj: 2134, protein_g: 7.0, fat_g: 29.0, carbs_g: 59.0, sodium_mg: 180.0, fiber_g: 0.8 } },
+  { name: "凤爪", category: "零食", emoji: "🐔", per100g: { energy_kj: 820, protein_g: 16.0, fat_g: 12.0, carbs_g: 5.0, sodium_mg: 2000.0, fiber_g: 0 } },
+  { name: "豆干", category: "零食", emoji: "🧈", per100g: { energy_kj: 628, protein_g: 16.0, fat_g: 8.0, carbs_g: 5.0, sodium_mg: 800.0, fiber_g: 1.0 } },
+  { name: "海苔", category: "零食", emoji: "🌿", per100g: { energy_kj: 1506, protein_g: 35.0, fat_g: 4.5, carbs_g: 45.0, sodium_mg: 1500.0, fiber_g: 30.0 } },
+  { name: "蚕豆", category: "零食", emoji: "🫘", per100g: { energy_kj: 1757, protein_g: 25.0, fat_g: 11.5, carbs_g: 52.0, sodium_mg: 500.0, fiber_g: 6.0 } },
+  { name: "爆米花", category: "零食", emoji: "🍿", per100g: { energy_kj: 1607, protein_g: 8.0, fat_g: 10.0, carbs_g: 66.0, sodium_mg: 500.0, fiber_g: 8.0 } },
+  { name: "锅巴", category: "零食", emoji: "🍘", per100g: { energy_kj: 1883, protein_g: 7.0, fat_g: 15.0, carbs_g: 72.0, sodium_mg: 600.0, fiber_g: 1.5 } },
+  { name: "话梅", category: "零食", emoji: "🫐", per100g: { energy_kj: 920, protein_g: 1.0, fat_g: 0.5, carbs_g: 50.0, sodium_mg: 3000.0, fiber_g: 4.0 } },
+  { name: "牛肉粒", category: "零食", emoji: "🧆", per100g: { energy_kj: 1450, protein_g: 40.0, fat_g: 8.0, carbs_g: 25.0, sodium_mg: 1300.0, fiber_g: 0 } },
+  { name: "蛋黄派", category: "零食", emoji: "🥧", per100g: { energy_kj: 1750, protein_g: 5.5, fat_g: 22.0, carbs_g: 52.0, sodium_mg: 160.0, fiber_g: 0.5 } },
+  { name: "沙琪玛", category: "零食", emoji: "🟫", per100g: { energy_kj: 2010, protein_g: 5.0, fat_g: 21.0, carbs_g: 67.0, sodium_mg: 100.0, fiber_g: 0.8 } },
+  { name: "干脆面", category: "零食", emoji: "🍜", per100g: { energy_kj: 2030, protein_g: 9.0, fat_g: 21.0, carbs_g: 62.0, sodium_mg: 950.0, fiber_g: 1.5 } },
+  { name: "卤蛋", category: "零食", emoji: "🥚", per100g: { energy_kj: 590, protein_g: 12.5, fat_g: 9.0, carbs_g: 2.0, sodium_mg: 800.0, fiber_g: 0 } },
+  { name: "盐焗腰果", category: "零食", emoji: "🌰", per100g: { energy_kj: 2500, protein_g: 18.0, fat_g: 46.0, carbs_g: 27.0, sodium_mg: 300.0, fiber_g: 3.0 } },
+
+  // ====== 饮料类 ======
+  { name: "可乐", category: "饮料", emoji: "🥤", per100g: { energy_kj: 180, protein_g: 0, fat_g: 0, carbs_g: 10.6, sodium_mg: 4.0, fiber_g: 0 } },
+  { name: "雪碧", category: "饮料", emoji: "🥤", per100g: { energy_kj: 175, protein_g: 0, fat_g: 0, carbs_g: 10.3, sodium_mg: 5.0, fiber_g: 0 } },
+  { name: "橙汁", category: "饮料", emoji: "🧃", per100g: { energy_kj: 197, protein_g: 0.6, fat_g: 0.1, carbs_g: 11.0, sodium_mg: 1.0, fiber_g: 0.2 } },
+  { name: "苹果汁", category: "饮料", emoji: "🧃", per100g: { energy_kj: 193, protein_g: 0.1, fat_g: 0.1, carbs_g: 11.2, sodium_mg: 2.0, fiber_g: 0.1 } },
+  { name: "奶茶", category: "饮料", emoji: "🧋", per100g: { energy_kj: 280, protein_g: 1.5, fat_g: 3.0, carbs_g: 10.5, sodium_mg: 50.0, fiber_g: 0 } },
+  { name: "珍珠奶茶", category: "饮料", emoji: "🧋", per100g: { energy_kj: 377, protein_g: 1.0, fat_g: 3.5, carbs_g: 16.0, sodium_mg: 40.0, fiber_g: 0.5 } },
+  { name: "豆奶", category: "饮料", emoji: "🥛", per100g: { energy_kj: 180, protein_g: 2.5, fat_g: 1.5, carbs_g: 4.0, sodium_mg: 30.0, fiber_g: 0.3 } },
+  { name: "椰汁", category: "饮料", emoji: "🥥", per100g: { energy_kj: 155, protein_g: 0.3, fat_g: 2.0, carbs_g: 5.0, sodium_mg: 25.0, fiber_g: 0 } },
+  { name: "运动饮料", category: "饮料", emoji: "🥤", per100g: { energy_kj: 113, protein_g: 0, fat_g: 0, carbs_g: 6.5, sodium_mg: 50.0, fiber_g: 0 } },
+  { name: "啤酒", category: "饮料", emoji: "🍺", per100g: { energy_kj: 134, protein_g: 0.5, fat_g: 0, carbs_g: 3.1, sodium_mg: 4.0, fiber_g: 0 } },
+  { name: "拿铁咖啡", category: "饮料", emoji: "☕", per100g: { energy_kj: 201, protein_g: 2.0, fat_g: 2.5, carbs_g: 4.0, sodium_mg: 30.0, fiber_g: 0 } },
+  { name: "美式咖啡", category: "饮料", emoji: "☕", per100g: { energy_kj: 13, protein_g: 0.1, fat_g: 0, carbs_g: 0, sodium_mg: 2.0, fiber_g: 0 } },
+
+  // ====== 加工食品类 ======
+  { name: "方便面", category: "加工食品", emoji: "🍜", per100g: { energy_kj: 1966, protein_g: 9.5, fat_g: 21.1, carbs_g: 61.6, sodium_mg: 1860.0, fiber_g: 1.2 } },
+  { name: "方便面(煮)", category: "加工食品", emoji: "🍜", per100g: { energy_kj: 460, protein_g: 2.2, fat_g: 5.0, carbs_g: 14.5, sodium_mg: 440.0, fiber_g: 0.3 } },
+  { name: "速冻水饺", category: "加工食品", emoji: "🥟", per100g: { energy_kj: 837, protein_g: 8.0, fat_g: 10.0, carbs_g: 23.0, sodium_mg: 380.0, fiber_g: 1.0 } },
+  { name: "速冻汤圆", category: "加工食品", emoji: "⚪", per100g: { energy_kj: 1050, protein_g: 3.5, fat_g: 5.5, carbs_g: 48.0, sodium_mg: 30.0, fiber_g: 0.5 } },
+  { name: "午餐肉", category: "加工食品", emoji: "🥫", per100g: { energy_kj: 958, protein_g: 12.0, fat_g: 18.0, carbs_g: 4.0, sodium_mg: 900.0, fiber_g: 0 } },
+  { name: "榨菜", category: "加工食品", emoji: "🥬", per100g: { energy_kj: 180, protein_g: 2.0, fat_g: 0.3, carbs_g: 7.0, sodium_mg: 5000.0, fiber_g: 1.5 } },
+  { name: "老干妈", category: "加工食品", emoji: "🌶️", per100g: { energy_kj: 2390, protein_g: 7.0, fat_g: 55.0, carbs_g: 10.0, sodium_mg: 2800.0, fiber_g: 2.0 } },
+  { name: "腐乳", category: "加工食品", emoji: "🧈", per100g: { energy_kj: 550, protein_g: 10.0, fat_g: 8.0, carbs_g: 6.0, sodium_mg: 5500.0, fiber_g: 0.5 } },
+  { name: "罐头午餐肉", category: "加工食品", emoji: "🥫", per100g: { energy_kj: 991, protein_g: 12.5, fat_g: 19.0, carbs_g: 3.5, sodium_mg: 850.0, fiber_g: 0 } },
+  { name: "速冻包子", category: "加工食品", emoji: "🫓", per100g: { energy_kj: 921, protein_g: 7.5, fat_g: 7.0, carbs_g: 33.0, sodium_mg: 320.0, fiber_g: 1.0 } },
+  { name: "速冻馄饨", category: "加工食品", emoji: "🥟", per100g: { energy_kj: 790, protein_g: 7.0, fat_g: 8.5, carbs_g: 22.5, sodium_mg: 360.0, fiber_g: 0.8 } },
+  { name: "肉松", category: "加工食品", emoji: "🥩", per100g: { energy_kj: 1560, protein_g: 38.0, fat_g: 15.0, carbs_g: 22.0, sodium_mg: 1200.0, fiber_g: 0 } },
+  { name: "沙拉酱", category: "加工食品", emoji: "🫗", per100g: { energy_kj: 2550, protein_g: 1.0, fat_g: 65.0, carbs_g: 5.0, sodium_mg: 600.0, fiber_g: 0 } },
 
   // ====== 调料及其他 ======
   { name: "食用油", category: "调料", emoji: "🫒", per100g: { energy_kj: 3699, protein_g: 0, fat_g: 99.9, carbs_g: 0, sodium_mg: 0, fiber_g: 0 } },
@@ -181,17 +236,102 @@ const FOOD_DB = [
 ];
 
 // 搜索函数
+// User-contributed food database (localStorage)
+const USER_FOOD_DB_KEY = 'user_food_db';
+
+function loadUserFoodDB() {
+  try {
+    const raw = localStorage.getItem(USER_FOOD_DB_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveUserFoodDB(foods) {
+  localStorage.setItem(USER_FOOD_DB_KEY, JSON.stringify(foods));
+}
+
+function addUserFoodToDB(food) {
+  const db = loadUserFoodDB();
+  const idx = db.findIndex(f => f.name === food.name);
+  const entry = {
+    name: food.name,
+    category: '用户收录',
+    emoji: '📦',
+    thumbnail: food.thumbnail || null,
+    per100g: { ...food.per100g },
+    notes: food.notes || null,
+    source: 'user',
+  };
+  // Save original snapshot for restore (only on first add, not on edit)
+  if (idx >= 0) {
+    entry._original = db[idx]._original || {
+      name: entry.name,
+      thumbnail: entry.thumbnail,
+      per100g: { ...entry.per100g },
+      notes: entry.notes,
+    };
+  } else {
+    entry._original = {
+      name: entry.name,
+      thumbnail: entry.thumbnail,
+      per100g: { ...entry.per100g },
+      notes: entry.notes,
+    };
+  }
+  if (idx >= 0) db[idx] = entry;
+  else db.push(entry);
+  saveUserFoodDB(db);
+}
+
+function restoreUserFoodInDB(name) {
+  const db = loadUserFoodDB();
+  const idx = db.findIndex(f => f.name === name);
+  if (idx < 0 || !db[idx]._original) return false;
+  const orig = db[idx]._original;
+  db[idx].name = orig.name;
+  db[idx].thumbnail = orig.thumbnail;
+  db[idx].per100g = { ...orig.per100g };
+  db[idx].notes = orig.notes;
+  saveUserFoodDB(db);
+  return true;
+}
+
 function searchFoods(query) {
   if (!query || query.trim().length === 0) return [];
   const q = query.trim().toLowerCase();
+  const userDB = loadUserFoodDB();
+  // Keyword search for user-contributed foods
+  const userKeywords = ['收录', '用户', '用户收录'];
+  const isUserKeyword = userKeywords.some(k => q.includes(k));
+  if (isUserKeyword) {
+    return userDB.slice(0, 15);
+  }
   const results = [];
+  // Search built-in DB first
   for (const food of FOOD_DB) {
     if (food.name.toLowerCase().includes(q) || food.category.includes(q)) {
       results.push(food);
     }
     if (results.length >= 15) break;
   }
+  // Search user-contributed DB
+  for (const food of userDB) {
+    if (food.name.toLowerCase().includes(q) || food.category.includes(q)) {
+      results.push(food);
+    }
+    if (results.length >= 15) break;
+  }
   return results;
+}
+
+function removeUserFoodFromDB(name) {
+  const db = loadUserFoodDB();
+  const filtered = db.filter(f => f.name !== name);
+  saveUserFoodDB(filtered);
+}
+
+function getUserFoodDB() {
+  return loadUserFoodDB();
 }
 
 // 按分类获取

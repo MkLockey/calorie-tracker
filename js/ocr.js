@@ -31,7 +31,6 @@ async function initOCR(onProgress) {
       if (m.status === 'loading tesseract core' || m.status === 'loading language traineddata') {
         const pct = m.progress ? Math.round(m.progress * 100) : 0;
         onProgress?.(`${m.status}... ${pct}%`);
-        // Update progress bar
         const bar = document.getElementById('ocr-progress');
         if (bar) bar.style.width = pct + '%';
       } else if (m.status === 'recognizing text') {
@@ -40,10 +39,8 @@ async function initOCR(onProgress) {
     },
   });
 
-  // Set parameters for better nutrition label recognition
-  await worker.setParameters({
-    tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./%()gkJkcalmg蛋白质脂肪碳水化合物钠膳食纤维糖能量热NRV营养成分表项目每克毫升 ',
-  });
+  // PSM 6: uniform block of text — better for table-like nutrition labels
+  await worker.setParameters({ tessedit_pageseg_mode: '6' });
 
   ocrWorker = worker;
   ocrInitialized = true;
@@ -77,12 +74,13 @@ async function preprocessImage(file) {
       canvas.height = h;
       const ctx = canvas.getContext('2d');
 
-      // Enhance contrast for better OCR
-      ctx.filter = 'contrast(1.3) brightness(1.1)';
+      // Moderate enhancement — thin text (like fiber row) needs contrast boost
+      ctx.filter = 'contrast(1.15) brightness(1.02)';
+      ctx.imageSmoothingEnabled = false;
       ctx.drawImage(img, 0, 0, w, h);
 
       resolve({
-        dataUrl: canvas.toDataURL('image/jpeg', 0.85),
+        dataUrl: canvas.toDataURL('image/jpeg', 0.92),
         width: w,
         height: h,
       });

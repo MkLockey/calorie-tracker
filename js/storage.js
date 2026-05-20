@@ -1,8 +1,9 @@
 const DB_NAME = 'calorie_tracker';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_ENTRIES = 'food_entries';
 const STORE_PANTRY = 'pantry';
 const STORE_EXERCISE = 'daily_exercise';
+const STORE_WATER = 'daily_water';
 
 let db = null;
 
@@ -24,6 +25,9 @@ function openDB() {
       }
       if (!d.objectStoreNames.contains(STORE_EXERCISE)) {
         d.createObjectStore(STORE_EXERCISE, { keyPath: 'date' });
+      }
+      if (!d.objectStoreNames.contains(STORE_WATER)) {
+        d.createObjectStore(STORE_WATER, { keyPath: 'date' });
       }
     };
     req.onsuccess = (e) => { db = e.target.result; resolve(db); };
@@ -135,6 +139,70 @@ async function getExercise(dateStr) {
   });
 }
 
+async function getExerciseByDateRange(fromDate, toDate) {
+  const d = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction(STORE_EXERCISE, 'readonly');
+    const range = IDBKeyRange.bound(fromDate, toDate);
+    const req = tx.objectStore(STORE_EXERCISE).getAll(range);
+    req.onsuccess = () => {
+      const map = {};
+      for (const row of req.result || []) {
+        map[row.date] = row.exercise_kcal || 0;
+      }
+      resolve(map);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ====== Daily Water ======
+async function saveWater(dateStr, ml) {
+  const d = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction(STORE_WATER, 'readwrite');
+    const req = tx.objectStore(STORE_WATER).put({ date: dateStr, water_ml: ml });
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getWater(dateStr) {
+  const d = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction(STORE_WATER, 'readonly');
+    const req = tx.objectStore(STORE_WATER).get(dateStr);
+    req.onsuccess = () => resolve(req.result?.water_ml || 0);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function hasAnyExerciseRecords() {
+  const d = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction(STORE_EXERCISE, 'readonly');
+    const req = tx.objectStore(STORE_EXERCISE).count();
+    req.onsuccess = () => resolve(req.result > 0);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getExerciseLast7Days() {
+  const d = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction(STORE_EXERCISE, 'readonly');
+    const req = tx.objectStore(STORE_EXERCISE).getAll();
+    req.onsuccess = () => {
+      const map = {};
+      for (const row of req.result || []) {
+        map[row.date] = row.exercise_kcal || 0;
+      }
+      resolve(map);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
 // ====== User Profile (localStorage) ======
 const PROFILE_KEY = 'user_profile';
 
@@ -158,9 +226,15 @@ function getDefaultProfile() {
     weight_kg: 65,
     age: 25,
     goal: 'maintain',
-    activity_level: 'moderate',
+    activity_level: 'normal_life',
     custom_bmr: null,
+    use_custom_bmr: false,
     frame_size: 'medium',
     body_goal: 'fit',
+    target_weight_kg: null,
+    target_date: null,
+    water_goal_ml: 2000,
+    body_fat_pct: null,
+    use_custom_bodyfat: false,
   };
 }

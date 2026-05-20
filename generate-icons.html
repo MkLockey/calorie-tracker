@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Icon Generator</title></head><body>
+<h2>Icon Generator — 每日营养追踪</h2>
+<p>打开后自动下载 3 个图标，如被浏览器拦截请允许。</p>
+<script>
+function drawIcon(canvas, size, maskable) {
+  const ctx = canvas.getContext('2d');
+  canvas.width = size; canvas.height = size;
+
+  const r = size * 0.16;
+  const pad = maskable ? size * 0.11 : 0;
+  const s = size - pad * 2;
+
+  // Rounded rect background
+  ctx.beginPath();
+  ctx.moveTo(pad + r, pad); ctx.lineTo(pad + s - r, pad);
+  ctx.quadraticCurveTo(pad + s, pad, pad + s, pad + r);
+  ctx.lineTo(pad + s, pad + s - r);
+  ctx.quadraticCurveTo(pad + s, pad + s, pad + s - r, pad + s);
+  ctx.lineTo(pad + r, pad + s);
+  ctx.quadraticCurveTo(pad, pad + s, pad, pad + s - r);
+  ctx.lineTo(pad, pad + r);
+  ctx.quadraticCurveTo(pad, pad, pad + r, pad);
+  ctx.clip();
+
+  // Gradient bg
+  const grad = ctx.createLinearGradient(0, 0, 0, pad + s);
+  grad.addColorStop(0, '#1a1a2e');
+  grad.addColorStop(1, '#2a2a50');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+
+  // Subtle radial glow
+  const glow = ctx.createRadialGradient(size/2, size*0.35, s*0.1, size/2, size*0.35, s*0.8);
+  glow.addColorStop(0, 'rgba(108, 92, 231, 0.15)');
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(pad, pad, s, s);
+
+  const cx = pad + s / 2;
+  const cy = pad + s * 0.42;
+
+  drawMotif(ctx, cx, cy, s * 0.175);
+}
+
+function drawMotif(ctx, cx, cy, s) {
+  // ====== Outer ring (plate) ======
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = s * 0.12;
+  ctx.beginPath();
+  ctx.arc(cx, cy, s * 1.5, -Math.PI * 0.75, Math.PI * 0.75);
+  ctx.stroke();
+
+  // ====== Segments (balanced nutrition) ======
+  const segColors = ['#ff6b6b', '#f9ca24', '#4ecdc4'];
+  const segLabels = [
+    { r: s * 1.38, start: -Math.PI * 0.72, end: -Math.PI * 0.24 },
+    { r: s * 1.38, start: -Math.PI * 0.22, end: Math.PI * 0.26 },
+    { r: s * 1.38, start: Math.PI * 0.28, end: Math.PI * 0.72 },
+  ];
+  segLabels.forEach((seg, i) => {
+    ctx.strokeStyle = segColors[i];
+    ctx.lineWidth = s * 0.22;
+    ctx.lineCap = 'butt';
+    ctx.beginPath();
+    ctx.arc(cx, cy, seg.r, seg.start, seg.end);
+    ctx.stroke();
+  });
+
+  // ====== Center dot ======
+  ctx.fillStyle = '#6c5ce7';
+  ctx.beginPath();
+  ctx.arc(cx, cy, s * 0.28, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner white highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.beginPath();
+  ctx.arc(cx - s * 0.06, cy - s * 0.06, s * 0.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ====== Leaf accent (top-right) ======
+  const lx = cx + s * 1.1;
+  const ly = cy - s * 1.2;
+  ctx.fillStyle = 'rgba(78, 205, 196, 0.8)';
+  ctx.beginPath();
+  ctx.ellipse(lx, ly, s * 0.35, s * 0.18, Math.PI * 0.25, 0, Math.PI * 2);
+  ctx.fill();
+  // Leaf vein
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = s * 0.04;
+  ctx.beginPath();
+  ctx.moveTo(lx - s * 0.2, ly);
+  ctx.lineTo(lx + s * 0.25, ly);
+  ctx.stroke();
+}
+
+function download(canvas, filename) {
+  canvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.download = filename;
+    a.href = URL.createObjectURL(blob);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  }, 'image/png');
+}
+
+window.onload = () => {
+  const files = [
+    { name: 'icon-192.png', size: 192, maskable: false },
+    { name: 'icon-512.png', size: 512, maskable: false },
+    { name: 'icon-512-maskable.png', size: 512, maskable: true },
+  ];
+  files.forEach(f => {
+    const c = document.createElement('canvas');
+    drawIcon(c, f.size, f.maskable);
+    download(c, f.name);
+  });
+  document.body.innerHTML += '<p style="color:green;font-weight:bold;">✅ 已触发 3 个图标下载，如被拦截请在地址栏右侧允许多文件下载。</p>';
+};
+</script>
+</body></html>

@@ -2,20 +2,53 @@
 let currentPage = 'log';
 let currentDate = formatDate(new Date());
 let currentImageDataUrl = null;
+let currentMeal = 'breakfast';
+
+// ====== Theme ======
+function initTheme() {
+  const stored = localStorage.getItem('theme');
+  document.documentElement.dataset.theme = (stored === 'light') ? 'light' : 'dark';
+  updateThemeColor();
+}
+
+function toggleTheme() {
+  const toggle = document.getElementById('theme-toggle');
+  const next = toggle && toggle.checked ? 'dark' : 'light';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('theme', next);
+  updateThemeColor();
+}
+
+function updateThemeColor() {
+  const isLight = document.documentElement.dataset.theme === 'light';
+  const color = isLight ? '#ffffff' : '#1a1a2e';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', color);
+}
 
 // ====== Init ======
 document.addEventListener('DOMContentLoaded', async () => {
+  initTheme();
   migrateProfile();
   bindNavigation();
   bindDatePicker();
+  bindAddOverlay();
   bindAddFlow();
   bindStatsPeriod();
   bindChartToggle();
+  bindStatsNutrient();
+  bindChartExpand();
   bindIntakePreview();
   bindQuickWeights();
   bindManualEntry();
+  bindMealButtons();
   bindFoodSearch();
   bindProfilePage();
+  bindPantrySearch();
+  bindPantryAddFood();
+  bindReuseMenu();
+  bindWater();
+  bindClampNegativeInputs();
   bindDeficitToggle();
   registerSW();
   await renderLogPage(currentDate);
@@ -25,6 +58,12 @@ function migrateProfile() {
   const p = getProfile();
   let changed = false;
   if (p.goal === 'balanced') { p.goal = 'maintain'; changed = true; }
+  // Migrate old activity levels to new
+  const activityMap = { sedentary: 'very_low', light: 'sedentary_office', moderate: 'normal_life', active: 'high_steps', very_active: 'physical_labor' };
+  if (activityMap[p.activity_level]) {
+    p.activity_level = activityMap[p.activity_level];
+    changed = true;
+  }
   if (changed) saveProfile(p);
 }
 
@@ -37,6 +76,7 @@ function registerSW() {
 // ====== Tab Navigation ======
 function bindNavigation() {
   $$('.nav-btn').forEach(btn => {
+    if (!btn.dataset.page) return; // 跳过无 data-page 的按钮（如添加按钮）
     btn.addEventListener('click', () => switchPage(btn.dataset.page));
   });
 }
@@ -49,8 +89,9 @@ async function switchPage(page) {
   $(`.nav-btn[data-page="${page}"]`).classList.add('active');
 
   if (page === 'log') await renderLogPage(currentDate);
+  if (page === 'pantry') await renderPantryPage();
   if (page === 'stats') await renderStatsPage(7);
-  if (page === 'profile') renderProfilePage();
+  if (page === 'profile') await renderProfilePage();
 }
 
 // ====== Date Picker ======
@@ -59,15 +100,6 @@ function bindDatePicker() {
     currentDate = e.target.value;
     await renderLogPage(currentDate);
   });
-}
-
-// ====== Deficit Toggle ======
-function bindDeficitToggle() {
-  $('#deficit-toggle').addEventListener('click', () => {
-    $('#deficit-card').classList.toggle('open');
-  });
-  // Open by default
-  $('#deficit-card').classList.add('open');
 }
 
 // ====== Stats Period & Chart ======
@@ -87,8 +119,84 @@ function bindChartToggle() {
       $$('.chart-type-btn').forEach(b => { b.classList.remove('btn-active'); b.classList.add('btn-outline'); });
       btn.classList.remove('btn-outline'); btn.classList.add('btn-active');
       currentChartType = btn.dataset.chart;
-      if (currentStatsData) renderChart(currentStatsData.dates, currentStatsData.byDate, currentChartType);
+      if (currentStatsData) renderChart(currentStatsData.dates, currentStatsData.byDate, currentChartType, currentStatsNutrient);
     });
+  });
+}
+
+function bindStatsNutrient() {
+  $$('.nutrient-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.nutrient-btn').forEach(b => { b.classList.remove('btn-active'); b.classList.add('btn-outline'); });
+      btn.classList.remove('btn-outline'); btn.classList.add('btn-active');
+      currentStatsNutrient = btn.dataset.nutrient;
+      if (currentStatsData) renderChart(currentStatsData.dates, currentStatsData.byDate, currentChartType, currentStatsNutrient);
+    });
+  });
+}
+
+function bindChartExpand() {
+  $('#btn-expand-chart').addEventListener('click', () => {
+    const title = $('#chart-title')?.textContent || '图表总览';
+    $('#expand-chart-title').textContent = title;
+    if (currentStatsData) {
+      const { dates, byDate } = currentStatsData;
+      const nut = currentStatsNutrient || 'energy_kcal';
+      const [_, unit] = NUTRIENT_LABELS[nut] || ['', 'kcal'];
+      const dailyValues = dates.map(d => {
+        if (byDate[d]) {
+          const sum = calcDailySummary(byDate[d]);
+          if (nut === 'energy_kcal') return sum.energy_kcal;
+          if (nut === 'fiber_g') return sum.fiber_g || 0;
+          if (nut === 'sodium_mg') return sum.sodium_mg || 0;
+          return sum[nut] || 0;
+        }
+        return 0;
+      });
+      const maxVal = Math.max(...dailyValues, 1);
+      const n = dailyValues.length;
+      const padTop = 20; const padBottom = 30; const padLeft = 34; const padRight = 10;
+      const pointGap = 44;
+      const plotW = pointGap * Math.max(1, n - 1);
+      const w = padLeft + plotW + padRight;
+      const plotH = Math.max(200, Math.round(window.innerHeight * 0.55));
+      const h = padTop + plotH + padBottom;
+      const xs = dailyValues.map((_, i) => padLeft + i * pointGap);
+      const yGrid = [0, 0.25, 0.5, 0.75, 1].map(f => {
+        const y = padTop + plotH - f * plotH;
+        const val = Math.round(f * maxVal);
+        return `<line x1="${padLeft - 4}" y1="${y}" x2="${w - padRight}" y2="${y}" class="grid-line"/>
+          <text x="${padLeft - 6}" y="${y + 3}" class="data-label" text-anchor="end">${val}</text>`;
+      }).join('');
+      const points = dailyValues.map((v, i) => {
+        const y = padTop + plotH - (v / maxVal) * plotH;
+        return `${xs[i]},${y}`;
+      }).join(' ');
+      const circles = dailyValues.map((v, i) => {
+        if (v === 0) return '';
+        const y = padTop + plotH - (v / maxVal) * plotH;
+        return `<circle cx="${xs[i]}" cy="${y}" r="4" class="data-point"/>`;
+      }).join('');
+      const labelStep = n > 20 ? 5 : n > 10 ? 2 : 1;
+      const labels = dates.map((d, i) => {
+        if (i % labelStep !== 0 && i !== n - 1) return '';
+        return `<text x="${xs[i]}" y="${h - 6}" class="axis-label">${d.slice(5)}</text>`;
+      }).join('');
+      const svgW = Math.max(w, 320);
+      $('#chart-expand-body').innerHTML = `
+        <div class="chart-line-wrap" style="width:100%">
+          <svg class="chart-line-svg chart-line-svg--large" viewBox="0 0 ${svgW} ${h}" preserveAspectRatio="xMidYMid meet">
+            ${yGrid}
+            <polyline points="${points}" class="data-line"/>
+            ${circles}
+            ${labels}
+          </svg>
+        </div>`;
+    }
+    $('#chart-expand-overlay').classList.remove('hidden');
+  });
+  $('#btn-close-expand').addEventListener('click', () => {
+    $('#chart-expand-overlay').classList.add('hidden');
   });
 }
 
@@ -140,7 +248,20 @@ async function startOCR() {
     const text = await runOCR(currentImageDataUrl, (msg) => {
       $('#ocr-status').textContent = msg;
     });
+    console.log('=== OCR RAW TEXT ===\n' + text + '\n=== END OCR ===');
     const parsed = parseNutritionText(text);
+    // Show scanned image above food name for visual verification
+    const resultImg = $('#result-preview-img');
+    resultImg.src = currentImageDataUrl;
+    resultImg.style.display = 'block';
+    resultImg.style.cursor = 'pointer';
+    resultImg.onclick = () => {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:2000;background:var(--overlay-bg);display:flex;align-items:center;justify-content:center;cursor:pointer;';
+      overlay.innerHTML = `<img src="${currentImageDataUrl}" style="max-width:95vw;max-height:95vh;object-fit:contain;">`;
+      overlay.addEventListener('click', () => overlay.remove());
+      document.body.appendChild(overlay);
+    };
     $('#food-name').value = parsed.name || '';
     $('#nf-energy').value = parsed.energy_kj || '';
     $('#nf-protein').value = parsed.protein_g || '';
@@ -173,6 +294,19 @@ function getFormPer100g() {
 }
 
 async function saveCurrentEntry() {
+  // Pantry-only mode: save to pantry instead of log
+  if (addOverlayPantryMode) {
+    await saveToPantry();
+    addOverlayPantryMode = false;
+    const saveBtn = $('#btn-save');
+    const pantryBtn = $('#btn-save-pantry');
+    if (saveBtn) saveBtn.textContent = '💾 保存记录';
+    if (pantryBtn) pantryBtn.classList.remove('hidden');
+    currentImageDataUrl = null;
+    closeAddOverlay();
+    return;
+  }
+
   const name = $('#food-name').value.trim() || '未命名食品';
   const weight_g = parseFloat($('#food-weight').value) || 0;
   if (weight_g <= 0) { showToast('请输入吃的重量'); $('#food-weight').focus(); return; }
@@ -184,17 +318,20 @@ async function saveCurrentEntry() {
     date: currentDate,
     datetime: now.toISOString(),
     time: formatTime(now),
+    meal: currentMeal,
     name,
     thumbnail: currentImageDataUrl ? await createThumbnail(currentImageDataUrl) : null,
     per100g,
     weight_g,
+    notes: $('#food-notes').value.trim() || null,
     actualIntake: calcIntake(per100g, weight_g),
   };
 
   await saveEntry(entry);
   resetAddForm();
+  closeAddOverlay();
+  await switchPage('log');
   showToast('已保存！');
-  switchPage('log');
 }
 
 async function saveToPantry() {
@@ -205,13 +342,6 @@ async function saveToPantry() {
   const hasData = Object.values(per100g).some(v => v != null && v > 0);
   if (!hasData) { showToast('请先输入营养成分'); return; }
 
-  // Check duplicate
-  const existing = await findPantryByName(name);
-  if (existing.length > 0) {
-    showToast(`"${name}" 已在仓库中`);
-    return;
-  }
-
   const item = {
     id: generateId(),
     name,
@@ -219,20 +349,29 @@ async function saveToPantry() {
     category: '自定义',
     thumbnail: currentImageDataUrl ? await createThumbnail(currentImageDataUrl) : null,
     per100g,
+    notes: $('#food-notes').value.trim() || null,
     source: currentImageDataUrl ? 'ocr' : 'manual',
     createdAt: new Date().toISOString(),
   };
 
   await savePantryItem(item);
+  await switchPage('pantry');
   showToast(`"${name}" 已保存到仓库`);
 }
 
 function resetAddForm() {
   showStep('upload');
   currentImageDataUrl = null;
-  $$('#page-add input[type=number]').forEach(i => i.value = '');
+  currentMeal = 'breakfast';
+  $$('.meal-btn').forEach(b => {
+    b.classList.toggle('btn-active', b.dataset.meal === 'breakfast');
+    b.classList.toggle('btn-outline', b.dataset.meal !== 'breakfast');
+  });
+  $$('#add-overlay input[type=number]').forEach(i => i.value = '');
   $('#food-name').value = '';
   $('#preview-img').src = '';
+  const resultImg = $('#result-preview-img');
+  if (resultImg) { resultImg.src = ''; resultImg.style.display = 'none'; }
   $('#food-search-input').value = '';
   $('#search-results').classList.add('hidden');
 }
@@ -267,9 +406,25 @@ function bindQuickWeights() {
 function bindManualEntry() {
   $('#btn-manual').addEventListener('click', () => {
     currentImageDataUrl = null;
+    currentMeal = 'breakfast';
+    $$('.meal-btn').forEach(b => {
+      b.classList.toggle('btn-active', b.dataset.meal === 'breakfast');
+      b.classList.toggle('btn-outline', b.dataset.meal !== 'breakfast');
+    });
     ['#food-name', '#nf-energy', '#nf-protein', '#nf-fat', '#nf-carbs', '#nf-fiber', '#nf-sodium', '#food-weight'].forEach(s => $(s).value = '');
     updateEstimatedIntake();
     showStep('result');
+  });
+}
+
+// ====== Meal Type ======
+function bindMealButtons() {
+  $$('.meal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.meal-btn').forEach(b => { b.classList.remove('btn-active'); b.classList.add('btn-outline'); });
+      btn.classList.remove('btn-outline'); btn.classList.add('btn-active');
+      currentMeal = btn.dataset.meal;
+    });
   });
 }
 
@@ -329,16 +484,25 @@ async function doSearch(query) {
 
   results.innerHTML = allResults.map(f => {
     const kcal = calcKcal(f.per100g.energy_kj);
-    const isPantry = f.source !== undefined;
-    const sourceTag = isPantry ? (f.source === 'ocr' ? '📷' : '✏️') : '';
-    const sourceLabel = isPantry ? '我的仓库' : '';
+    const isPantry = !!f.id;
+    const isUserDB = f.source === 'user';
+    const sourceTag = isPantry ? (f.source === 'ocr' ? '📷' : '✏️') : (isUserDB ? '📥' : '');
+    const sourceLabel = isPantry ? '我的仓库' : (isUserDB ? '数据库-用户收录' : '');
+    // Thumbnail for search results
+    let searchThumb;
+    if (f.thumbnail) {
+      searchThumb = `<img class="food-item-thumb" src="${f.thumbnail}" alt="" style="width:36px;height:36px;">`;
+    } else {
+      const dbMatch = FOOD_DB.find(d => d.name === f.name);
+      searchThumb = `<div class="food-item-thumb food-item-thumb-emoji" style="width:36px;height:36px;font-size:1.2rem;">${dbMatch ? dbMatch.emoji : (f.emoji || '📦')}</div>`;
+    }
     return `
-    <div class="search-result-item" data-food-name="${escapeHtml(f.name)}" data-pantry-id="${isPantry ? f.id : ''}">
-      <span class="sr-emoji">${f.emoji || '📦'}</span>
+    <div class="search-result-item" data-food-name="${escapeHtml(f.name)}" data-pantry-id="${isPantry ? f.id : ''}" data-user-db="${isUserDB ? '1' : ''}">
+      ${searchThumb}
       <div class="sr-info">
         <div class="sr-name">${escapeHtml(f.name)} ${sourceTag}</div>
         <div class="sr-category">${sourceLabel || f.category}</div>
-        <div class="sr-meta">蛋白 ${f.per100g.protein_g}g · 脂肪 ${f.per100g.fat_g}g · 碳水 ${f.per100g.carbs_g}g</div>
+        <div class="sr-meta">蛋白 ${f.per100g.protein_g}g · 脂肪 ${f.per100g.fat_g}g · 碳水 ${f.per100g.carbs_g}g${isUserDB ? ' <button class="btn btn-xs btn-outline" data-remove-user-db="' + escapeHtml(f.name) + '" style="font-size:0.55rem;color:var(--danger);padding:1px 4px;margin-left:4px;">取消收录</button>' : ''}</div>
       </div>
       <div class="sr-kcal"><strong>${kcal}</strong><span>kcal</span></div>
     </div>`;
@@ -346,13 +510,28 @@ async function doSearch(query) {
 
   results.classList.remove('hidden');
 
+  results.querySelectorAll('[data-remove-user-db]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const name = btn.dataset.removeUserDb;
+      if (confirm(`确定取消收录「${name}」？将从公共数据库中移除。`)) {
+        removeUserFoodFromDB(name);
+        btn.closest('.search-result-item').remove();
+        showToast(`已取消收录「${name}」`);
+      }
+    });
+  });
+
   results.querySelectorAll('.search-result-item').forEach(item => {
     item.addEventListener('click', () => {
       const name = item.dataset.foodName;
       const pantryId = item.dataset.pantryId;
+      const isUserDb = item.dataset.userDb === '1';
       let food;
       if (pantryId) {
         food = pantryItems.find(p => p.id === pantryId);
+      } else if (isUserDb) {
+        food = loadUserFoodDB().find(f => f.name === name);
       } else {
         food = FOOD_DB.find(f => f.name === name);
       }
@@ -381,8 +560,360 @@ function selectFoodFromSearch(food) {
   showToast(`已选择 ${food.name}，请输入重量`);
 }
 
+// ====== Add Overlay ======
+function bindAddOverlay() {
+  $('#btn-add-food').addEventListener('click', openAddOverlay);
+  $('#btn-close-add').addEventListener('click', closeAddOverlay);
+}
+
+let addOverlayPantryMode = false;
+
+// ====== Pantry Add Food ======
+function bindPantryAddFood() {
+  const btn = $('#btn-add-pantry-food');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      addOverlayPantryMode = true;
+      openAddOverlay();
+      // Update UI for pantry-only mode
+      const saveBtn = $('#btn-save');
+      const pantryBtn = $('#btn-save-pantry');
+      if (saveBtn) saveBtn.textContent = '📦 保存到仓库';
+      if (pantryBtn) pantryBtn.classList.add('hidden');
+    });
+  }
+}
+
+// ====== Pantry Search ======
+let pantrySearchDebounce = null;
+
+function bindPantrySearch() {
+  const input = $('#pantry-search-input');
+  const clearBtn = $('#pantry-search-clear');
+
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    clearBtn.classList.toggle('hidden', val.length === 0);
+    clearTimeout(pantrySearchDebounce);
+    pantrySearchDebounce = setTimeout(() => filterPantryItems(val), 150);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    clearBtn.classList.add('hidden');
+    filterPantryItems('');
+  });
+
+  const banner = $('#user-db-banner');
+  if (banner) {
+    banner.addEventListener('click', () => openUserFoodDBOverlay());
+  }
+}
+
+async function filterPantryItems(query) {
+  const q = query.trim();
+
+  // 空搜索直接委托给 renderPantryPage，保证界面一致
+  if (!q) {
+    await renderPantryPage();
+    return;
+  }
+
+  const userDB = getUserFoodDB();
+  const banner = $('#user-db-banner');
+  if (banner) banner.classList.toggle('hidden', userDB.length === 0);
+
+  const items = await getAllPantryItems();
+  const listEl = $('#pantry-list');
+
+  let results = items.filter(item =>
+    item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q)
+  );
+
+  // Search FOOD_DB as well
+  const dbResults = searchFoods(q);
+  const pantryNames = new Set(items.map(i => i.name));
+  for (const dbFood of dbResults) {
+    if (!pantryNames.has(dbFood.name)) {
+      results.push({ ...dbFood, _fromDb: true });
+    }
+  }
+
+  if (results.length === 0) {
+    listEl.innerHTML = '<div class="empty-state small"><p>仓库和数据库中没有匹配的食物</p></div>';
+    return;
+  }
+
+  const itemsForBinding = results; // capture for event handlers
+  listEl.innerHTML = results.map(item => {
+    const kcal = calcKcal(item.per100g?.energy_kj);
+    const isDb = item._fromDb;
+    const isUserDb = isDb && item.source === 'user';
+    const itemId = isDb ? ((isUserDb ? 'userdb_' : 'db_') + item.name) : item.id;
+    let searchThumbHtml;
+    if (item.thumbnail) {
+      searchThumbHtml = `<img class="food-item-thumb" src="${item.thumbnail}" alt="">`;
+    } else {
+      const dbF = FOOD_DB.find(f => f.name === item.name);
+      if (dbF) {
+        searchThumbHtml = `<div class="food-item-thumb food-item-thumb-emoji">${dbF.emoji || '📦'}</div>`;
+      } else {
+        searchThumbHtml = `<div class="food-item-thumb food-item-thumb-emoji">${item.emoji || '📦'}</div>`;
+      }
+    }
+    return `
+    <div class="food-item pantry-item" data-pantry="${itemId}" data-from-db="${isDb || ''}"${isDb ? '' : ' data-draggable'}>
+      ${searchThumbHtml}
+      <div class="food-item-info">
+        <div class="food-item-name">${escapeHtml(item.name)}${isDb ? (item.source === 'user' ? ' <span style="font-size:0.65rem;color:var(--accent)">(数据库-用户收录)</span>' : ' <span style="font-size:0.65rem;color:var(--text-secondary)">(数据库)</span>') : ''}</div>
+        <div class="food-item-meta">
+          ${item.category} · 蛋白 ${item.per100g?.protein_g || 0}g · 脂肪 ${item.per100g?.fat_g || 0}g · 碳水 ${item.per100g?.carbs_g || 0}g${item.notes ? ' · 备注' : ''}
+        </div>
+        <div class="pantry-quick-log">
+          <select class="pq-meal" data-pantry-meal="${itemId}">
+            <option value="breakfast">🌅 早餐</option>
+            <option value="lunch">☀️ 午餐</option>
+            <option value="dinner">🌙 晚餐</option>
+            <option value="snack">🍪 加餐</option>
+            <option value="snack_food">🍿 零食</option>
+            <option value="other">📌 其他</option>
+          </select>
+          <button class="btn btn-xs btn-outline pq-btn" data-weight="50">50g</button>
+          <button class="btn btn-xs btn-outline pq-btn" data-weight="100">100g</button>
+          <button class="btn btn-xs btn-outline pq-btn" data-weight="150">150g</button>
+          <button class="btn btn-xs btn-outline pq-btn" data-weight="200">200g</button>
+        </div>
+      </div>
+      <div class="food-item-calories">
+        <strong>${kcal}</strong>
+        <span>kcal/100g</span>
+        ${isDb ? (item.source === 'user' ? '<button class="btn btn-xs btn-primary" data-add-db-pantry="' + escapeHtml(item.name) + '" style="margin-top:2px;font-size:0.6rem;">存库</button> <button class="btn btn-xs btn-outline" data-remove-user-db="' + escapeHtml(item.name) + '" style="margin-top:2px;font-size:0.6rem;color:var(--danger);">取消收录</button>' : '<button class="btn btn-xs btn-primary" data-add-db-pantry="' + escapeHtml(item.name) + '" style="margin-top:2px;font-size:0.6rem;">存库</button>') : ''}
+      </div>
+      ${isDb ? '' : `<button class="food-item-delete" data-delete-pantry="${itemId}" style="opacity:1;top:auto;bottom:8px;">🗑</button>`}
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('[data-delete-pantry]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await deletePantryItem(btn.dataset.deletePantry);
+      await filterPantryItems($('#pantry-search-input').value.trim());
+      showToast('已从仓库删除');
+    });
+  });
+
+  listEl.querySelectorAll('[data-add-db-pantry]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const name = btn.dataset.addDbPantry;
+      let dbFood = FOOD_DB.find(f => f.name === name);
+      let source = 'database';
+      if (!dbFood) { dbFood = loadUserFoodDB().find(f => f.name === name); source = 'userdb'; }
+      if (!dbFood) return;
+      await savePantryItem({
+        id: generateId(),
+        name: dbFood.name,
+        emoji: dbFood.emoji || '📦',
+        category: dbFood.category,
+        per100g: { ...dbFood.per100g },
+        notes: dbFood.notes || null,
+        thumbnail: dbFood.thumbnail || null,
+        source,
+        createdAt: new Date().toISOString(),
+      });
+      await filterPantryItems($('#pantry-search-input').value.trim());
+      showToast(`"${dbFood.name}" 已存到仓库`);
+    });
+  });
+
+  listEl.querySelectorAll('[data-remove-user-db]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const name = btn.dataset.removeUserDb;
+      if (confirm(`确定取消收录「${name}」？将从公共数据库中移除。`)) {
+        removeUserFoodFromDB(name);
+        filterPantryItems($('#pantry-search-input').value.trim());
+        showToast(`已取消收录「${name}」`);
+      }
+    });
+  });
+
+  bindPantryQuickLogInApp(listEl, itemsForBinding);
+
+  enableDragReorder(listEl, async () => {
+    const orderedIds = [...listEl.querySelectorAll('[data-draggable]')].map(el => el.dataset.pantry);
+    const allItems = await getAllPantryItems();
+    for (let i = 0; i < orderedIds.length; i++) {
+      const item = allItems.find(it => it.id === orderedIds[i]);
+      if (item && item.order !== i) {
+        item.order = i;
+        await savePantryItem(item);
+      }
+    }
+  });
+}
+
+function bindPantryQuickLogInApp(listEl, items) {
+  listEl.querySelectorAll('.pq-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const pantryItem = btn.closest('[data-pantry]');
+      const pantryId = pantryItem.dataset.pantry;
+      const isDb = pantryItem.dataset.fromDb === 'true';
+      let item = items.find(i => i.id === pantryId);
+      if (!item && isDb) {
+        // Look up from built-in FOOD_DB or user-contributed DB
+        item = FOOD_DB.find(f => 'db_' + f.name === pantryId) ||
+               loadUserFoodDB().find(f => 'userdb_' + f.name === pantryId);
+      }
+      if (!item) return;
+      const mealSelect = pantryItem.querySelector('.pq-meal');
+      const meal = mealSelect ? mealSelect.value : 'snack_food';
+      const weightG = parseInt(btn.dataset.weight);
+      const now = new Date();
+      const entry = {
+        id: generateId(),
+        date: currentDate,
+        datetime: now.toISOString(),
+        time: formatTime(now),
+        meal,
+        name: item.name,
+        thumbnail: item.thumbnail || null,
+        per100g: item.per100g,
+        weight_g: weightG,
+        actualIntake: calcIntake(item.per100g, weightG),
+      };
+      await saveEntry(entry);
+      showToast(`已记录 ${item.name} ${weightG}g (${meal})`);
+    });
+  });
+}
+
+// ====== Menu Reuse ======
+function bindReuseMenu() {
+  $('#btn-reuse-yesterday').addEventListener('click', async () => {
+    await reuseMenu(1);
+  });
+  $('#btn-reuse-lastweek').addEventListener('click', async () => {
+    await reuseMenu(7);
+  });
+}
+
+async function reuseMenu(daysAgo) {
+  const sourceDate = getDateDaysAgo(daysAgo);
+  const sourceEntries = await getEntriesByDate(sourceDate);
+  if (sourceEntries.length === 0) {
+    showToast(daysAgo === 1 ? '昨天没有记录' : '上周同天没有记录');
+    return;
+  }
+
+  const label = daysAgo === 1 ? '昨天' : '上周同天';
+  const currentEntries = await getEntriesByDate(currentDate);
+  const confirmMsg = currentEntries.length > 0
+    ? `确认用${label}的 ${sourceEntries.length} 条记录覆盖今天已有的 ${currentEntries.length} 条记录吗？`
+    : `确认用${label}的 ${sourceEntries.length} 条记录添加到今天吗？`;
+  if (!confirm(confirmMsg)) return;
+
+  // Delete existing entries for current date first (overwrite)
+  for (const e of currentEntries) {
+    await deleteEntry(e.id);
+  }
+
+  const now = new Date();
+  let count = 0;
+  for (const entry of sourceEntries) {
+    const newEntry = {
+      ...entry,
+      id: generateId(),
+      date: currentDate,
+      datetime: now.toISOString(),
+      time: formatTime(now),
+      thumbnail: entry.thumbnail || null,
+    };
+    await saveEntry(newEntry);
+    count++;
+  }
+  await renderLogPage(currentDate);
+  showToast(`已复用 ${count} 条记录`);
+}
+
+// ====== Deficit Toggle ======
+function bindDeficitToggle() {
+  const toggle = $('#deficit-toggle');
+  const card = $('#deficit-card');
+  if (toggle && card) {
+    toggle.addEventListener('click', () => {
+      card.classList.toggle('open');
+    });
+    card.classList.add('open');
+  }
+}
+
+// ====== Water Tracking ======
+function bindWater() {
+  $('#water-input').addEventListener('change', async () => {
+    const ml = parseFloat($('#water-input').value) || 0;
+    await saveWater(currentDate, ml);
+    await renderLogPage(currentDate);
+  });
+
+  $$('.water-quick').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const addMl = parseInt(btn.dataset.ml);
+      const currentMl = await getWater(currentDate);
+      const newMl = currentMl + addMl;
+      await saveWater(currentDate, newMl);
+      $('#water-input').value = '';
+      await renderLogPage(currentDate);
+      showToast(`+${addMl}ml 饮水，共 ${newMl}ml`);
+    });
+  });
+}
+
+function bindClampNegativeInputs() {
+  document.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.tagName === 'INPUT' && el.type === 'number' && el.hasAttribute('min')) {
+      const minVal = parseFloat(el.getAttribute('min'));
+      if (!isNaN(minVal) && parseFloat(el.value) < minVal) {
+        el.value = minVal;
+      }
+    }
+  });
+}
+
 // ====== Profile Page ======
 function bindProfilePage() {
+  // Theme toggle
+  const themeToggle = $('#theme-toggle');
+  if (themeToggle) {
+    themeToggle.checked = document.documentElement.dataset.theme === 'dark';
+    themeToggle.addEventListener('change', toggleTheme);
+  }
+
+  // Body params fold toggle
+  const toggle = $('#body-params-toggle');
+  const body = $('#body-params-body');
+  const arrow = $('#body-params-arrow');
+  const summary = $('#body-params-summary');
+  if (toggle && body) {
+    toggle.addEventListener('click', () => {
+      const hidden = body.style.display === 'none';
+      body.style.display = hidden ? '' : 'none';
+      if (arrow) arrow.textContent = hidden ? '▼' : '▶';
+      if (summary) {
+        if (hidden) {
+          // Expanding — hide summary
+          summary.classList.add('hidden');
+        } else {
+          // Collapsing — show summary
+          summary.textContent = getBodyParamsSummary();
+          summary.classList.remove('hidden');
+        }
+      }
+    });
+  }
+
   // Gender buttons
   $$('.gender-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -427,9 +958,19 @@ function bindProfilePage() {
   $('#use-custom-bmr').addEventListener('change', () => {
     const checked = $('#use-custom-bmr').checked;
     $('#custom-bmr-row').classList.toggle('hidden', !checked);
+    updateProfileField('use_custom_bmr', checked);
     if (checked) {
-      const val = parseFloat($('#custom-bmr-value').value) || 0;
-      updateProfileField('custom_bmr', val);
+      const existingVal = parseFloat($('#custom-bmr-value').value);
+      if (!existingVal || existingVal <= 0) {
+        const formulaBmr = calcBMR(
+          getProfile().gender,
+          getProfile().weight_kg,
+          getProfile().height_cm,
+          getProfile().age
+        );
+        $('#custom-bmr-value').value = formulaBmr;
+        updateProfileField('custom_bmr', formulaBmr);
+      }
     } else {
       updateProfileField('custom_bmr', null);
       $('#custom-bmr-value').value = '';
@@ -439,10 +980,10 @@ function bindProfilePage() {
 
   // Custom BMR value input
   $('#custom-bmr-value').addEventListener('input', () => {
-    if ($('#use-custom-bmr').checked) {
-      const val = parseFloat($('#custom-bmr-value').value) || 0;
+    const val = parseFloat($('#custom-bmr-value').value);
+    if (val > 0) {
       updateProfileField('custom_bmr', val);
-      updateProfileResults();
+      if ($('#use-custom-bmr').checked) updateProfileResults();
     }
   });
 
@@ -462,11 +1003,72 @@ function bindProfilePage() {
     updateProfileResults();
   });
 
+  // Target weight
+  $('#pf-target-weight').addEventListener('input', () => {
+    const val = parseFloat($('#pf-target-weight').value) || null;
+    updateProfileField('target_weight_kg', val);
+    updateProfileResults();
+  });
+
+  // Target date
+  $('#pf-target-date').addEventListener('change', () => {
+    updateProfileField('target_date', $('#pf-target-date').value || null);
+    updateProfileResults();
+  });
+
+  // Water goal
+  $('#pf-water-goal').addEventListener('input', () => {
+    const val = parseInt($('#pf-water-goal').value) || 2000;
+    updateProfileField('water_goal_ml', val);
+  });
+
+  // Body fat toggle
+  $('#use-custom-bodyfat').addEventListener('change', async () => {
+    const checked = $('#use-custom-bodyfat').checked;
+    updateProfileField('use_custom_bodyfat', checked);
+    $('#pf-bodyfat').readOnly = !checked;
+    $('#pf-bodyfat').style.opacity = checked ? '1' : '0.6';
+    if (!checked) {
+      const pd = await getProfileData();
+      $('#pf-bodyfat').value = pd.bodyFatPct;
+      updateProfileField('body_fat_pct', null);
+    }
+    updateProfileResults();
+  });
+
+  // Body fat input
+  $('#pf-bodyfat').addEventListener('input', () => {
+    if ($('#use-custom-bodyfat').checked) {
+      const val = parseFloat($('#pf-bodyfat').value);
+      if (val > 0) {
+        updateProfileField('body_fat_pct', val);
+        updateProfileResults();
+      }
+    }
+  });
+
   // Save button
   $('#btn-save-profile').addEventListener('click', async () => {
-    updateProfileResults();
-    // Refresh log page progress bars with new recommendations
+    await updateProfileResults();
     await renderLogPage(currentDate);
     showToast('参数已保存');
   });
+}
+
+function getBodyParamsSummary() {
+  const p = getProfile();
+  const genderLabel = { male: '男', female: '女' };
+  const goalLabel = { cut: '减脂', bulk: '增肌', maintain: '维持', recomp: '混合' };
+  const frameLabel = { small: '细骨架', medium: '中骨架', large: '大骨架' };
+  const bodyGoalLabel = { fit: '匀称', lean: '薄肌', sculpted: '立体', muscular: '肌肉', skinny: '偏瘦' };
+  const parts = [
+    genderLabel[p.gender] || '男',
+    (p.height_cm || '--') + 'cm',
+    (p.weight_kg || '--') + 'kg',
+    (p.age || '--') + '岁',
+    goalLabel[p.goal] || '减脂',
+    frameLabel[p.frame_size] || '中骨架',
+    bodyGoalLabel[p.body_goal] || '匀称',
+  ];
+  return parts.join(' | ');
 }

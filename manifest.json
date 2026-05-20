@@ -1,6 +1,6 @@
 {
-  "name": "营养热量追踪",
-  "short_name": "热量追踪",
+  "name": "每日营养追踪",
+  "short_name": "营养追踪",
   "description": "拍照识别营养成分表，计算每日营养摄入",
   "start_url": "./index.html",
   "display": "standalone",
@@ -9,16 +9,22 @@
   "background_color": "#0f0f1a",
   "icons": [
     {
-      "src": "icons/icon-192.svg",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512.svg",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": ["health", "fitness", "lifestyle"],
