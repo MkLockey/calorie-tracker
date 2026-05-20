@@ -304,6 +304,156 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 0.85rem;
 }
 .date-picker::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+.date-picker.hidden { display: none; }
+
+/* ====== Date Navigation ====== */
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.btn-date-arrow {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-date-arrow:hover { background: var(--border); color: var(--text); }
+.btn-date {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 120px;
+  text-align: center;
+  white-space: nowrap;
+}
+.btn-date:hover { border-color: var(--primary); }
+.btn-date-sm { font-size: 0.8rem; padding: 5px 10px; min-width: 110px; }
+
+/* ====== Calendar Popup ====== */
+#cal-overlay {
+  align-items: center;
+  justify-content: center;
+}
+.cal-popup {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: 320px;
+  max-width: 92vw;
+  box-shadow: var(--shadow-heavy);
+  margin: auto;
+}
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+.cal-month-year {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 110px;
+  text-align: center;
+}
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+.cal-weekdays span { padding: 4px 0; }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.82rem;
+  color: var(--text);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+.cal-day:hover { background: var(--bg); }
+.cal-day.other-month { color: var(--text-secondary); opacity: 0.4; }
+.cal-day.today { font-weight: 700; color: var(--primary); }
+.cal-day.selected { background: var(--primary); color: #fff; font-weight: 700; }
+.cal-day.selected.today { background: var(--primary); color: #fff; }
+
+.cal-period-divider {
+  border-top: 1px solid var(--border);
+  margin: 12px 0 10px;
+}
+.cal-period-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--text);
+  flex-wrap: wrap;
+}
+.cal-period-label { color: var(--text-secondary); margin-right: 2px; }
+
+.cal-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+  gap: 8px;
+}
+
+/* ====== Profile Period Inputs ====== */
+.pf-period-inputs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+.pf-period-input {
+  width: 50px;
+  padding: 5px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.82rem;
+  text-align: center;
+}
+.pf-period-target {
+  font-size: 0.78rem;
+  color: var(--primary);
+  margin-left: 4px;
+  font-weight: 500;
+}
+.pf-target-period-row { align-items: flex-start; padding-top: 2px; }
+.pf-period-divider {
+  color: var(--border);
+  margin: 0 2px;
+  font-size: 0.85rem;
+}
 
 /* ====== Buttons ====== */
 .btn {
@@ -786,7 +936,7 @@ button { cursor: pointer; border: none; background: none; }
 .profile-section h3 { font-size: 1rem; margin-bottom: 14px; color: var(--text); font-weight: 700; }
 
 .profile-form { display: flex; flex-direction: column; gap: 14px; }
-.pf-row { display: flex; align-items: center; gap: 12px; }
+.pf-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .pf-row > label { width: 60px; font-size: 0.85rem; flex-shrink: 0; color: var(--text-secondary); }
 .pf-row input {
   flex: 1;

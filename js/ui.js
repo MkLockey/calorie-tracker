@@ -14,6 +14,7 @@ function showToast(msg) {
 // ====== Log Page ======
 async function renderLogPage(dateStr) {
   $('#log-date').value = dateStr;
+  if (typeof updateDateBtn === 'function') updateDateBtn();
   const entries = await getEntriesByDate(dateStr);
   const summary = calcDailySummary(entries);
   const p = await getProfileData();
@@ -870,6 +871,11 @@ async function renderProfilePage() {
   // Target weight & date
   $('#pf-target-weight').value = p.target_weight_kg || '';
   $('#pf-target-date').value = p.target_date || '';
+  if (typeof updatePfTargetDateBtn === 'function') updatePfTargetDateBtn();
+  // Clear period inputs on load (date from saved profile, not from period)
+  if ($('#pf-target-months')) $('#pf-target-months').value = '';
+  if ($('#pf-target-days')) $('#pf-target-days').value = '';
+  if ($('#pf-period-target-date')) $('#pf-period-target-date').textContent = '';
   $('#pf-water-goal').value = p.water_goal_ml || 2000;
 
   // Body fat — always show calculated value, only editable when custom toggle ON

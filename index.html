@@ -17,7 +17,12 @@
       <div class="page-header">
         <h1>每日记录</h1>
         <div class="header-actions">
-          <input type="date" id="log-date" class="date-picker">
+          <div class="date-nav">
+            <button class="btn btn-icon btn-date-arrow" id="date-prev">◀</button>
+            <button class="btn btn-date" id="date-btn">--</button>
+            <button class="btn btn-icon btn-date-arrow" id="date-next">▶</button>
+          </div>
+          <input type="date" id="log-date" class="date-picker hidden">
         </div>
       </div>
 
@@ -531,7 +536,16 @@
           </div>
           <div class="pf-row">
             <label>目标日期</label>
-            <input type="date" id="pf-target-date" class="pf-select">
+            <button class="btn btn-date btn-date-sm" id="pf-target-date-btn">--</button>
+            <input type="date" id="pf-target-date" class="pf-select hidden">
+            <span class="pf-period-divider">|</span>
+            <div class="pf-period-inputs">
+              <input type="number" id="pf-target-months" class="pf-period-input" placeholder="0" min="0" max="36" step="1">
+              <span>个月</span>
+              <input type="number" id="pf-target-days" class="pf-period-input" placeholder="0" min="0" max="999" step="1">
+              <span>天</span>
+              <span class="pf-period-target" id="pf-period-target-date"></span>
+            </div>
           </div>
           <div class="pf-row">
             <label>饮水目标</label>
@@ -627,6 +641,39 @@
       </div>
       <div class="overlay-body chart-expand-body" id="chart-expand-body">
         <div class="empty-state"><p>暂无图表数据</p></div>
+      </div>
+    </div>
+
+    <!-- 日历选择器 -->
+    <div id="cal-overlay" class="overlay hidden">
+      <div class="cal-popup">
+        <div class="cal-header">
+          <button class="btn btn-icon btn-date-arrow" id="cal-prev-year">◀◀</button>
+          <button class="btn btn-icon btn-date-arrow" id="cal-prev-month">◀</button>
+          <span id="cal-month-year" class="cal-month-year"></span>
+          <button class="btn btn-icon btn-date-arrow" id="cal-next-month">▶</button>
+          <button class="btn btn-icon btn-date-arrow" id="cal-next-year">▶▶</button>
+        </div>
+        <div class="cal-weekdays">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-period" id="cal-period-wrap" style="display:none">
+          <div class="cal-period-divider"></div>
+          <div class="cal-period-row">
+            <span class="cal-period-label">距今天</span>
+            <input type="number" id="cal-months" class="pf-period-input" placeholder="0" min="0" max="36" step="1">
+            <span>个月</span>
+            <input type="number" id="cal-days" class="pf-period-input" placeholder="0" min="0" max="999" step="1">
+            <span>天</span>
+            <span class="pf-period-target" id="cal-period-result"></span>
+          </div>
+        </div>
+        <div class="cal-footer">
+          <button class="btn btn-sm" id="cal-today">今天</button>
+          <button class="btn btn-sm" id="cal-clear">清除</button>
+          <button class="btn btn-sm btn-primary" id="cal-confirm">确定</button>
+        </div>
       </div>
     </div>
   </div>

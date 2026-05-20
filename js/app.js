@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   migrateProfile();
   bindNavigation();
-  bindDatePicker();
+  bindCalendar();
   bindAddOverlay();
   bindAddFlow();
   bindStatsPeriod();
@@ -94,12 +94,252 @@ async function switchPage(page) {
   if (page === 'profile') await renderProfilePage();
 }
 
-// ====== Date Picker ======
-function bindDatePicker() {
-  $('#log-date').addEventListener('change', async (e) => {
-    currentDate = e.target.value;
+// ====== Date Navigation & Calendar ======
+let calYear, calMonth, calSelectedDate, calCallback, calShowPeriod;
+
+function formatDateCN(d) {
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  const m = d.getMonth() + 1, day = d.getDate();
+  return m + '月' + day + '日 ' + weekdays[d.getDay()];
+}
+
+function toDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+
+function updateDateBtn() {
+  const d = new Date(currentDate + 'T00:00:00');
+  $('#date-btn').textContent = formatDateCN(d);
+  $('#log-date').value = currentDate;
+}
+
+function updatePfTargetDateBtn() {
+  const el = $('#pf-target-date-btn');
+  const input = $('#pf-target-date');
+  if (!el || !input) return;
+  const v = input.value;
+  if (v) {
+    const d = new Date(v + 'T00:00:00');
+    el.textContent = formatDateCN(d);
+    el.style.color = '';
+  } else {
+    el.textContent = '选择日期';
+    el.style.color = 'var(--text-secondary)';
+  }
+}
+
+// Update target date from period inputs (months + days from today)
+function updateTargetFromPeriod() {
+  const months = parseInt($('#pf-target-months').value) || 0;
+  const days = parseInt($('#pf-target-days').value) || 0;
+  if (months === 0 && days === 0) return;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(today);
+  target.setMonth(target.getMonth() + months);
+  target.setDate(target.getDate() + days);
+  const str = toDateStr(target);
+  $('#pf-target-date').value = str;
+  updatePfTargetDateBtn();
+  $('#pf-period-target-date').textContent = str;
+  updateProfileField('target_date', str);
+  updateProfileResults();
+}
+
+function updateCalPeriodResult() {
+  const el = $('#cal-period-result');
+  if (!el) return;
+  const months = parseInt($('#cal-months').value) || 0;
+  const days = parseInt($('#cal-days').value) || 0;
+  if (months === 0 && days === 0) { el.textContent = ''; return; }
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(today);
+  target.setMonth(target.getMonth() + months);
+  target.setDate(target.getDate() + days);
+  el.textContent = '→ ' + formatDateCN(target) + ' (' + toDateStr(target) + ')';
+}
+
+function renderCalendar(year, month) {
+  calYear = year; calMonth = month;
+  const grid = $('#cal-grid');
+  grid.innerHTML = '';
+  $('#cal-month-year').textContent = year + '年 ' + (month + 1) + '月';
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrev = new Date(year, month, 0).getDate();
+
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const d = daysInPrev - i;
+    const dateStr = year + '-' + String(month === 0 ? 12 : month).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    addCalDay(d, 'other-month', dateStr);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const classes = [];
+    if (dateStr === calSelectedDate) classes.push('selected');
+    if (dateStr === toDateStr(today)) classes.push('today');
+    addCalDay(d, classes.join(' '), dateStr);
+  }
+  const totalCells = firstDay + daysInMonth;
+  const remaining = totalCells <= 35 ? 35 - totalCells : 42 - totalCells;
+  for (let d = 1; d <= remaining; d++) {
+    const nextMonth = month + 2 > 12 ? 1 : month + 2;
+    const dateStr = year + '-' + String(nextMonth).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    addCalDay(d, 'other-month', dateStr);
+  }
+}
+
+function addCalDay(text, className, dateStr) {
+  const btn = document.createElement('button');
+  btn.className = 'cal-day ' + className;
+  btn.textContent = text;
+  btn.addEventListener('click', () => {
+    calSelectedDate = dateStr;
+    renderCalendar(calYear, calMonth);
+    if (calShowPeriod) updateCalPeriodResult();
+  });
+  $('#cal-grid').appendChild(btn);
+}
+
+function openCalendar(selectedDate, callback, showPeriod) {
+  calSelectedDate = selectedDate || toDateStr(new Date());
+  calCallback = callback;
+  calShowPeriod = showPeriod || false;
+
+  const d = new Date(calSelectedDate + 'T00:00:00');
+  calYear = d.getFullYear();
+  calMonth = d.getMonth();
+
+  // Show/hide period section and clear button
+  const periodWrap = $('#cal-period-wrap');
+  periodWrap.style.display = calShowPeriod ? '' : 'none';
+  $('#cal-clear').style.display = calShowPeriod ? '' : 'none';
+  if (calShowPeriod) {
+    $('#cal-months').value = '';
+    $('#cal-days').value = '';
+    $('#cal-period-result').textContent = '';
+  }
+
+  renderCalendar(calYear, calMonth);
+  $('#cal-overlay').classList.remove('hidden');
+}
+
+function closeCalendar() {
+  $('#cal-overlay').classList.add('hidden');
+}
+
+function confirmCalendar() {
+  if (calShowPeriod) {
+    const months = parseInt($('#cal-months').value) || 0;
+    const days = parseInt($('#cal-days').value) || 0;
+    if (months > 0 || days > 0) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const target = new Date(today);
+      target.setMonth(target.getMonth() + months);
+      target.setDate(target.getDate() + days);
+      calSelectedDate = toDateStr(target);
+    }
+  }
+  if (calCallback) calCallback(calSelectedDate);
+  closeCalendar();
+}
+
+function bindCalendar() {
+  // Date button on log page
+  $('#date-btn').addEventListener('click', () => {
+    openCalendar(currentDate, (date) => {
+      currentDate = date || toDateStr(new Date());
+      updateDateBtn();
+      renderLogPage(currentDate);
+    }, false);
+  });
+
+  // Prev/next day arrows
+  $('#date-prev').addEventListener('click', async () => {
+    const d = new Date(currentDate + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    currentDate = toDateStr(d);
+    updateDateBtn();
     await renderLogPage(currentDate);
   });
+  $('#date-next').addEventListener('click', async () => {
+    const d = new Date(currentDate + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    currentDate = toDateStr(d);
+    updateDateBtn();
+    await renderLogPage(currentDate);
+  });
+
+  // Calendar navigation
+  $('#cal-prev-month').addEventListener('click', () => {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar(calYear, calMonth);
+  });
+  $('#cal-next-month').addEventListener('click', () => {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar(calYear, calMonth);
+  });
+  $('#cal-prev-year').addEventListener('click', () => { calYear--; renderCalendar(calYear, calMonth); });
+  $('#cal-next-year').addEventListener('click', () => { calYear++; renderCalendar(calYear, calMonth); });
+
+  $('#cal-today').addEventListener('click', () => {
+    const today = toDateStr(new Date());
+    calSelectedDate = today;
+    const d = new Date();
+    calYear = d.getFullYear(); calMonth = d.getMonth();
+    renderCalendar(calYear, calMonth);
+    if (calShowPeriod) { $('#cal-months').value = ''; $('#cal-days').value = ''; $('#cal-period-result').textContent = ''; }
+  });
+  $('#cal-clear').addEventListener('click', () => {
+    calSelectedDate = null;
+    if (calCallback) calCallback(null);
+    closeCalendar();
+  });
+  $('#cal-confirm').addEventListener('click', confirmCalendar);
+
+  // Close on overlay click
+  $('#cal-overlay').addEventListener('click', (e) => {
+    if (e.target === $('#cal-overlay')) closeCalendar();
+  });
+
+  // Period inputs in calendar
+  $('#cal-months').addEventListener('input', updateCalPeriodResult);
+  $('#cal-days').addEventListener('input', updateCalPeriodResult);
+
+  // Profile target date button
+  $('#pf-target-date-btn').addEventListener('click', () => {
+    const currentVal = $('#pf-target-date').value;
+    openCalendar(currentVal || toDateStr(new Date()), (date) => {
+      if (date) {
+        $('#pf-target-date').value = date;
+        // Clear profile period inputs since date was set directly
+        $('#pf-target-months').value = '';
+        $('#pf-target-days').value = '';
+        $('#pf-period-target-date').textContent = '';
+        updatePfTargetDateBtn();
+        updateProfileField('target_date', date);
+        updateProfileResults();
+      } else {
+        $('#pf-target-date').value = '';
+        $('#pf-target-months').value = '';
+        $('#pf-target-days').value = '';
+        $('#pf-period-target-date').textContent = '';
+        updatePfTargetDateBtn();
+        updateProfileField('target_date', null);
+        updateProfileResults();
+      }
+    }, true);
+  });
+
+  // Profile period inputs (months/days)
+  $('#pf-target-months').addEventListener('input', updateTargetFromPeriod);
+  $('#pf-target-days').addEventListener('input', updateTargetFromPeriod);
 }
 
 // ====== Stats Period & Chart ======
@@ -1010,8 +1250,12 @@ function bindProfilePage() {
     updateProfileResults();
   });
 
-  // Target date
+  // Target date: sync button + clear period inputs when date changes outside calendar
   $('#pf-target-date').addEventListener('change', () => {
+    $('#pf-target-months').value = '';
+    $('#pf-target-days').value = '';
+    $('#pf-period-target-date').textContent = '';
+    updatePfTargetDateBtn();
     updateProfileField('target_date', $('#pf-target-date').value || null);
     updateProfileResults();
   });
