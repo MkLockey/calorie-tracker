@@ -317,9 +317,16 @@ function bindCalendar() {
     openCalendar(currentVal || toDateStr(new Date()), (date) => {
       if (date) {
         $('#pf-target-date').value = date;
-        // Clear profile period inputs since date was set directly
-        $('#pf-target-months').value = '';
-        $('#pf-target-days').value = '';
+        // Sync calendar period inputs to profile page
+        const calMonths = parseInt($('#cal-months').value) || 0;
+        const calDays = parseInt($('#cal-days').value) || 0;
+        if (calMonths > 0 || calDays > 0) {
+          $('#pf-target-months').value = calMonths;
+          $('#pf-target-days').value = calDays;
+        } else {
+          $('#pf-target-months').value = '';
+          $('#pf-target-days').value = '';
+        }
         updatePfTargetDateBtn();
         updateProfileField('target_date', date);
         updateProfileResults();
@@ -1196,24 +1203,25 @@ function bindProfilePage() {
     const checked = $('#use-custom-bmr').checked;
     const bmrInput = $('#custom-bmr-value');
     const bmrUnit = bmrInput.nextElementSibling;
-    bmrInput.classList.toggle('hidden', !checked);
-    if (bmrUnit) bmrUnit.classList.toggle('hidden', !checked);
+    bmrInput.readOnly = !checked;
+    bmrInput.style.opacity = checked ? '1' : '0.6';
+    if (bmrUnit) bmrUnit.style.opacity = checked ? '1' : '0.6';
     updateProfileField('use_custom_bmr', checked);
+    const formulaBmr = calcBMR(
+      getProfile().gender,
+      getProfile().weight_kg,
+      getProfile().height_cm,
+      getProfile().age
+    );
     if (checked) {
       const existingVal = parseFloat(bmrInput.value);
       if (!existingVal || existingVal <= 0) {
-        const formulaBmr = calcBMR(
-          getProfile().gender,
-          getProfile().weight_kg,
-          getProfile().height_cm,
-          getProfile().age
-        );
         bmrInput.value = formulaBmr;
         updateProfileField('custom_bmr', formulaBmr);
       }
     } else {
       updateProfileField('custom_bmr', null);
-      bmrInput.value = '';
+      bmrInput.value = formulaBmr;
     }
     updateProfileResults();
   });

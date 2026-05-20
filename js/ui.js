@@ -862,14 +862,15 @@ async function renderProfilePage() {
     b.classList.toggle('btn-outline', b.dataset.bodygoal !== bodyGoal);
   });
 
-  // Custom BMR
+  // Custom BMR (like body fat: always show value, toggle controls editability)
   const useCustom = p.use_custom_bmr === true;
   $('#use-custom-bmr').checked = useCustom;
-  $('#custom-bmr-value').value = (useCustom && p.custom_bmr) ? p.custom_bmr : '';
   const bmrInput = $('#custom-bmr-value');
+  bmrInput.value = (useCustom && p.custom_bmr) ? p.custom_bmr : (p.bmr || '');
+  bmrInput.readOnly = !useCustom;
+  bmrInput.style.opacity = useCustom ? '1' : '0.6';
   const bmrUnit = bmrInput.nextElementSibling;
-  bmrInput.classList.toggle('hidden', !useCustom);
-  if (bmrUnit) bmrUnit.classList.toggle('hidden', !useCustom);
+  if (bmrUnit) { bmrUnit.classList.remove('hidden'); bmrUnit.style.opacity = useCustom ? '1' : '0.6'; }
 
   // Target weight & date
   $('#pf-target-weight').value = p.target_weight_kg || '';
@@ -927,6 +928,10 @@ async function updateProfileResults() {
   } else {
     bmrSource.textContent = '(公式计算)';
     bmrSource.className = 'rec-note';
+    // Sync calculated BMR to input when toggle is off
+    if (!p.use_custom_bmr) {
+      $('#custom-bmr-value').value = p.bmr;
+    }
   }
 
   $('#rec-tdee').innerHTML = '<span class="rec-num rec-num-tdee">' + p.tdee + '</span>';
