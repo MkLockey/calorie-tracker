@@ -192,6 +192,31 @@ function renderCalendar(year, month) {
   }
 }
 
+// Calculate months and days from today to target date
+function calcMonthDayFromToday(targetDateStr) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(targetDateStr + 'T00:00:00');
+  let months = 0;
+  const cursor = new Date(today);
+  // Step forward by months until overshooting
+  while (true) {
+    const next = new Date(cursor);
+    next.setMonth(next.getMonth() + 1);
+    if (next > target) break;
+    cursor.setTime(next.getTime());
+    months++;
+  }
+  const days = Math.round((target - cursor) / 86400000);
+  return { months, days };
+}
+
+function fillCalPeriodFromDate(dateStr) {
+  const diff = calcMonthDayFromToday(dateStr);
+  $('#cal-months').value = diff.months;
+  $('#cal-days').value = diff.days;
+  updateCalPeriodResult();
+}
+
 function addCalDay(text, className, dateStr) {
   const btn = document.createElement('button');
   btn.className = 'cal-day ' + className;
@@ -199,7 +224,7 @@ function addCalDay(text, className, dateStr) {
   btn.addEventListener('click', () => {
     calSelectedDate = dateStr;
     renderCalendar(calYear, calMonth);
-    if (calShowPeriod) updateCalPeriodResult();
+    if (calShowPeriod) fillCalPeriodFromDate(dateStr);
   });
   $('#cal-grid').appendChild(btn);
 }
@@ -218,9 +243,7 @@ function openCalendar(selectedDate, callback, showPeriod) {
   periodWrap.style.display = calShowPeriod ? '' : 'none';
   $('#cal-clear').style.display = calShowPeriod ? '' : 'none';
   if (calShowPeriod) {
-    $('#cal-months').value = '';
-    $('#cal-days').value = '';
-    $('#cal-period-result').textContent = '';
+    fillCalPeriodFromDate(calSelectedDate);
   }
 
   renderCalendar(calYear, calMonth);
@@ -293,7 +316,7 @@ function bindCalendar() {
     const d = new Date();
     calYear = d.getFullYear(); calMonth = d.getMonth();
     renderCalendar(calYear, calMonth);
-    if (calShowPeriod) { $('#cal-months').value = ''; $('#cal-days').value = ''; $('#cal-period-result').textContent = ''; }
+    if (calShowPeriod) fillCalPeriodFromDate(today);
   });
   $('#cal-clear').addEventListener('click', () => {
     calSelectedDate = null;
