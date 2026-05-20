@@ -98,9 +98,9 @@ async function switchPage(page) {
 let calYear, calMonth, calSelectedDate, calCallback, calShowPeriod;
 
 function formatDateCN(d) {
-  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  const y = d.getFullYear();
   const m = d.getMonth() + 1, day = d.getDate();
-  return m + '月' + day + '日 ' + weekdays[d.getDay()];
+  return y + '年' + m + '月' + day + '日';
 }
 
 function toDateStr(d) {
@@ -1313,5 +1313,11 @@ function getBodyParamsSummary() {
     frameLabel[p.frame_size] || '中骨架',
     bodyGoalLabel[p.body_goal] || '匀称',
   ];
+  if (p.target_weight_kg && p.target_date) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const target = new Date(p.target_date + 'T00:00:00');
+    const days = Math.max(0, Math.round((target - today) / 86400000));
+    parts.push('目标 ' + days + '天');
+  }
   return parts.join(' | ');
 }

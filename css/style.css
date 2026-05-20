@@ -1375,8 +1375,8 @@ button { cursor: pointer; border: none; background: none; }
 .deficit-kcal-intake { color: var(--kcal-intake); font-weight: 700; }
 .deficit-kcal-out { color: var(--kcal-deficit-out); font-weight: 700; }
 .deficit-kcal-tdee { color: var(--warning); font-weight: 700; }
-.delta-target { color: var(--kcal-deficit-out); }
-.delta-exercise { color: var(--warning); }
+.delta-row strong.delta-target { color: var(--kcal-deficit-out); }
+.delta-row strong.delta-exercise { color: var(--warning); }
 .nrv-remain-text { font-size: 0.6rem; color: var(--nrv-remain); font-weight: 500; }
 
 .pantry-quick-log .pq-btn {
